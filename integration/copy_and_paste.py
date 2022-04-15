@@ -192,22 +192,22 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_s
             pred_vertices_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
 
         # convert joints to original image space (X, Y are aligned to image)
-        pred_body_joints_bbox = convert_smpl_to_bbox(
+        pred_body_joints_bbox = convert_smpl_to_bbox_torch(
             smplx_output.joints[0], camScale, camTrans)
-        pred_body_joints_img = convert_bbox_to_oriIm(
+        pred_body_joints_img = convert_bbox_to_oriIm_torch(
             pred_body_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
 
-        pred_lhand_joints_bbox = convert_smpl_to_bbox(
+        pred_lhand_joints_bbox = convert_smpl_to_bbox_torch(
             smplx_output.left_hand_joints[0], camScale, camTrans)
-        pred_lhand_joints_img = convert_bbox_to_oriIm(
+        pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
 
         pred_lhand_joints_img = pred_lhand_joints_img.detach().cpu().numpy()   
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
 
-        pred_rhand_joints_bbox = convert_smpl_to_bbox(
+        pred_rhand_joints_bbox = convert_smpl_to_bbox_torch(
             smplx_output.right_hand_joints[0], camScale, camTrans)
-        pred_rhand_joints_img = convert_bbox_to_oriIm(
+        pred_rhand_joints_img = convert_bbox_to_oriIm_torch(
             pred_rhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
         pred_rhand_joints_img = pred_rhand_joints_img.detach().cpu().numpy()  
         integral_output['pred_rhand_joints_img'] = pred_rhand_joints_img
