@@ -15,6 +15,20 @@ from torchvision.transforms import Normalize
 # For converting coordinate between SMPL 3D coord <-> 2D bbox <-> original 2D image 
 # data3D: (N,3), where N is number of 3D points in "smpl"'s 3D coordinate (vertex or skeleton)
 
+def convert_smpl_to_bbox_torch(data3D, scale, trans, bAppTransFirst=False):
+    resnet_input_size_half = 224 *0.5
+    trans = torch.from_numpy(trans).cuda()
+    if bAppTransFirst:      # Hand model
+        data3D[:, 0:2] = data3D[:, 0:2] + trans
+        data3D *= scale   # apply scaling
+    else:
+        data3D *= scale # apply scaling
+        data3D[:, 0:2] = data3D[:, 0:2] + trans
+
+    data3D*= resnet_input_size_half # 112 is originated from hrm's input size (224,24)
+    # data3D[:,:2]*= resnet_input_size_half # 112 is originated from hrm's input size (224,24)
+    return data3D
+
 def convert_smpl_to_bbox(data3D, scale, trans, bAppTransFirst=False):
     data3D = data3D.copy()
     resnet_input_size_half = 224 *0.5

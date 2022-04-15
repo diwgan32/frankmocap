@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import pdb
 import mocap_utils.geometry_utils as gu
-from mocap_utils.coordconv import convert_smpl_to_bbox, convert_bbox_to_oriIm
+from mocap_utils.coordconv import convert_smpl_to_bbox, convert_bbox_to_oriIm, convert_smpl_to_bbox_torch
 
 
 def get_kinematic_map(smplx_model, dst_idx):
@@ -198,7 +198,7 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_s
         integral_output['pred_betas'] = pred_betas.detach().cpu().numpy()
 
         # convert mesh to original image space (X,Y are aligned to image)
-        pred_vertices_bbox = convert_smpl_to_bbox(
+        pred_vertices_bbox = convert_smpl_to_bbox_torch(
             smplx_output.vertices[0], camScale, camTrans)
         
     return integral_output_list
