@@ -90,6 +90,40 @@ def transfer_rotation(
         return_value = return_value.numpy()
     return return_value
 
+def hand_fitting_loss(hand_pose, betas, model_joints, camera_t, camera_center,
+                      joints_2d, joints_conf, pose_prior,
+                      focal_length=5000, sigma=100, pose_prior_weight=4.78,
+                      shape_prior_weight=5, angle_prior_weight=15.2,
+                      output='sum'):
+    """
+    Loss function for body fitting
+    """
+
+    batch_size = body_pose.shape[0]
+    rotation = torch.eye(3, device=body_pose.device).unsqueeze(0).expand(batch_size, -1, -1)
+    projected_joints = perspective_projection(model_joints, rotation, camera_t,
+                                              focal_length, camera_center)
+
+    # Weighted robust reprojection error
+    reprojection_error = gmof(projected_joints - joints_2d, sigma)
+    reprojection_loss = (joints_conf ** 2) * reprojection_error.sum(dim=-1)
+
+    # Pose prior loss
+    pose_prior_loss = (pose_prior_weight ** 2) * pose_prior(body_pose, betas)
+
+    # Angle prior for knees and elbows
+    angle_prior_loss = (angle_prior_weight ** 2) * angle_prior(body_pose).sum(dim=-1)
+
+    # Regularizer to prevent betas from taking large values
+    shape_prior_loss = (shape_prior_weight ** 2) * (betas ** 2).sum(dim=-1)
+
+    total_loss = reprojection_loss.sum(dim=-1) + pose_prior_loss + angle_prior_loss + shape_prior_loss
+
+    if output == 'sum':
+        return total_loss.sum()
+    elif output == 'reprojection':
+        return reprojection_loss
+
 def optimization_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_shape):
     integral_output_list = list()
     for i in range(len(pred_body_list)):
@@ -138,8 +172,35 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_s
             left_hand_pose= left_hand_pose,
             pose2rot = True)
 
-        
+        pred_vertices = smplx_output.vertices
+        pred_vertices = pred_vertices[0].detach().cpu().numpy()
+        pred_body_joints = smplx_output.joints
+        pred_body_joints = pred_body_joints[0].detach().cpu().numpy()   
+        pred_lhand_joints = smplx_output.left_hand_joints
+        pred_lhand_joints = pred_lhand_joints[0].detach().cpu().numpy()
+        pred_rhand_joints = smplx_output.right_hand_joints
+        pred_rhand_joints = pred_rhand_joints[0].detach().cpu().numpy()
 
+        camScale = body_info['pred_camera'][0]
+        camTrans = body_info['pred_camera'][1:]
+        bbox_top_left = body_info['bbox_top_left']
+        bbox_scale_ratio = body_info['bbox_scale_ratio']
+
+        integral_output = dict()
+        integral_output['pred_vertices_smpl'] = pred_vertices
+        integral_output['faces'] = smplx_model.faces
+        integral_output['bbox_scale_ratio'] = bbox_scale_ratio
+        integral_output['bbox_top_left'] = bbox_top_left
+        integral_output['pred_camera'] = body_info['pred_camera']
+
+        pred_aa_tensor = gu.rotation_matrix_to_angle_axis(pred_rotmat.detach().cpu()[0])
+        integral_output['pred_body_pose'] = pred_aa_tensor.cpu().numpy().reshape(1, 72)
+        integral_output['pred_betas'] = pred_betas.detach().cpu().numpy()
+
+        # convert mesh to original image space (X,Y are aligned to image)
+        pred_vertices_bbox = convert_smpl_to_bbox(
+            smplx_output.vertices[0], camScale, camTrans)
+        
     return integral_output_list
 
 def integration_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_shape):
