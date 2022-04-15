@@ -90,7 +90,7 @@ def transfer_rotation(
         return_value = return_value.numpy()
     return return_value
 
-def hand_fitting_loss(hand_pose, betas, model_joints, camera_t, camera_center,
+def hand_fitting_loss(hand_pose, model_joints, camera_center,
                       joints_2d, joints_conf, pose_prior,
                       focal_length=5000, sigma=100, pose_prior_weight=4.78,
                       shape_prior_weight=5, angle_prior_weight=15.2,
@@ -100,24 +100,12 @@ def hand_fitting_loss(hand_pose, betas, model_joints, camera_t, camera_center,
     """
 
     batch_size = body_pose.shape[0]
-    rotation = torch.eye(3, device=body_pose.device).unsqueeze(0).expand(batch_size, -1, -1)
-    projected_joints = perspective_projection(model_joints, rotation, camera_t,
-                                              focal_length, camera_center)
-
+    
     # Weighted robust reprojection error
     reprojection_error = gmof(projected_joints - joints_2d, sigma)
     reprojection_loss = (joints_conf ** 2) * reprojection_error.sum(dim=-1)
 
-    # Pose prior loss
-    pose_prior_loss = (pose_prior_weight ** 2) * pose_prior(body_pose, betas)
-
-    # Angle prior for knees and elbows
-    angle_prior_loss = (angle_prior_weight ** 2) * angle_prior(body_pose).sum(dim=-1)
-
-    # Regularizer to prevent betas from taking large values
-    shape_prior_loss = (shape_prior_weight ** 2) * (betas ** 2).sum(dim=-1)
-
-    total_loss = reprojection_loss.sum(dim=-1) + pose_prior_loss + angle_prior_loss + shape_prior_loss
+    total_loss = reprojection_loss.sum(dim=-1)
 
     if output == 'sum':
         return total_loss.sum()
@@ -202,6 +190,103 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_s
             smplx_output.vertices[0], camScale, camTrans)
         pred_vertices_img = convert_bbox_to_oriIm_torch(
             pred_vertices_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+
+        # convert joints to original image space (X, Y are aligned to image)
+        pred_body_joints_bbox = convert_smpl_to_bbox(
+            smplx_output.joints[0], camScale, camTrans)
+        pred_body_joints_img = convert_bbox_to_oriIm(
+            pred_body_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+
+        pred_lhand_joints_bbox = convert_smpl_to_bbox(
+            smplx_output.left_hand_joints[0], camScale, camTrans)
+        pred_lhand_joints_img = convert_bbox_to_oriIm(
+            pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+
+        pred_lhand_joints_img = pred_lhand_joints_img.detach().cpu().numpy()   
+        integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
+
+        pred_rhand_joints_bbox = convert_smpl_to_bbox(
+            smplx_output.right_hand_joints[0], camScale, camTrans)
+        pred_rhand_joints_img = convert_bbox_to_oriIm(
+            pred_rhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+        pred_rhand_joints_img = pred_rhand_joints_img.detach().cpu().numpy()  
+        integral_output['pred_rhand_joints_img'] = pred_rhand_joints_img
+
+        r_hand_local_orient_body = body_info['pred_rotmat'][:, 21] # rot-mat
+        r_hand_global_orient_body = transfer_rotation(
+            smplx_model, pred_rotmat,
+            torch.from_numpy(r_hand_local_orient_body).cuda(),
+            21, 'l2g', 'aa').numpy().reshape(1, 3) # aa
+        r_hand_local_orient_body = gu.rotation_matrix_to_angle_axis(r_hand_local_orient_body) # rot-mat -> aa
+
+        l_hand_local_orient_body = body_info['pred_rotmat'][:, 20]
+        l_hand_global_orient_body = transfer_rotation(
+            smplx_model, pred_rotmat,
+            torch.from_numpy(l_hand_local_orient_body).cuda(),
+            20, 'l2g', 'aa').numpy().reshape(1, 3)
+        l_hand_local_orient_body = gu.rotation_matrix_to_angle_axis(l_hand_local_orient_body) # rot-mat -> aa
+
+        r_hand_local_orient_hand = None
+        r_hand_global_orient_hand = None
+        if right_hand_local_orient is not None:
+            r_hand_local_orient_hand = gu.rotation_matrix_to_angle_axis(
+                right_hand_local_orient).detach().cpu().numpy().reshape(1, 3)
+            r_hand_global_orient_hand = right_hand_global_orient.detach().cpu().numpy().reshape(1, 3)
+
+        l_hand_local_orient_hand = None
+        l_hand_global_orient_hand = None
+        if left_hand_local_orient is not None:
+            l_hand_local_orient_hand = gu.rotation_matrix_to_angle_axis(
+                left_hand_local_orient).detach().cpu().numpy().reshape(1, 3)
+            l_hand_global_orient_hand = left_hand_global_orient.detach().cpu().numpy().reshape(1, 3)
+
+        # poses and rotations related to hands
+        integral_output['left_hand_local_orient_body'] = l_hand_local_orient_body
+        integral_output['left_hand_global_orient_body'] = l_hand_global_orient_body
+        integral_output['right_hand_local_orient_body'] = r_hand_local_orient_body
+        integral_output['right_hand_global_orient_body'] = r_hand_global_orient_body
+
+        integral_output['left_hand_local_orient_hand'] = l_hand_local_orient_hand
+        integral_output['left_hand_global_orient_hand'] = l_hand_global_orient_hand
+        integral_output['right_hand_local_orient_hand'] = r_hand_local_orient_hand
+        integral_output['right_hand_global_orient_hand'] = r_hand_global_orient_hand
+
+        integral_output['pred_left_hand_pose'] = left_hand_pose.detach().cpu().numpy()
+        integral_output['pred_right_hand_pose'] = right_hand_pose.detach().cpu().numpy()
+
+        # predicted hand betas, cameras, top-left corner and center
+        left_hand_betas = None
+        left_hand_camera = None
+        left_hand_bbox_scale = None
+        left_hand_bbox_top_left = None
+        if hand_info is not None and hand_info['left_hand'] is not None:
+            left_hand_betas = hand_info['left_hand']['pred_hand_betas']
+            left_hand_camera = hand_info['left_hand']['pred_camera']
+            left_hand_bbox_scale = hand_info['left_hand']['bbox_scale_ratio']
+            left_hand_bbox_top_left = hand_info['left_hand']['bbox_top_left']
+
+        right_hand_betas = None
+        right_hand_camera = None
+        right_hand_bbox_scale = None
+        right_hand_bbox_top_left = None
+        if hand_info is not None and hand_info['right_hand'] is not None:
+            right_hand_betas = hand_info['right_hand']['pred_hand_betas']
+            right_hand_camera = hand_info['right_hand']['pred_camera']
+            right_hand_bbox_scale = hand_info['right_hand']['bbox_scale_ratio']
+            right_hand_bbox_top_left = hand_info['right_hand']['bbox_top_left']
+
+        integral_output['pred_left_hand_betas'] = left_hand_betas
+        integral_output['left_hand_camera'] = left_hand_camera
+        integral_output['left_hand_bbox_scale_ratio'] = left_hand_bbox_scale
+        integral_output['left_hand_bbox_top_left'] = left_hand_bbox_top_left
+
+        integral_output['pred_right_hand_betas'] = right_hand_betas
+        integral_output['right_hand_camera'] = right_hand_camera
+        integral_output['right_hand_bbox_scale_ratio'] = right_hand_bbox_scale
+        integral_output['right_hand_bbox_top_left'] = right_hand_bbox_top_left
+
+        integral_output_list.append(integral_output)
+
 
     return integral_output_list
 

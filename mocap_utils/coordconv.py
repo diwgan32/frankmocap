@@ -33,7 +33,6 @@ def convert_bbox_to_oriIm_torch(data3D, boxScale_o2n, bboxTopLeft, imgSizeW, img
     resnet_input_size_half = 224 *0.5
     imgSize = np.array([imgSizeW,imgSizeH])
     imgSize = torch.from_numpy(imgSize).cuda()
-    boxScale_o2n = torch.from_numpy(boxScale_o2n).cuda()
     data3D /= boxScale_o2n
 
     if not isinstance(bboxTopLeft, np.ndarray):
@@ -42,7 +41,7 @@ def convert_bbox_to_oriIm_torch(data3D, boxScale_o2n, bboxTopLeft, imgSizeW, img
         bboxTopLeft = np.array(bboxTopLeft)
 
     bboxTopLeft = torch.from_numpy(bboxTopLeft).cuda()
-    
+
     data3D[:,:2] += (bboxTopLeft + resnet_input_size_half/boxScale_o2n)
 
     return data3D
