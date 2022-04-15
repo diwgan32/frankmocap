@@ -19,6 +19,7 @@ import mocap_utils.demo_utils as demo_utils
 import mocap_utils.general_utils as gnu
 from mocap_utils.timer import Timer
 from datetime import datetime
+import demo.get_video_metadata as metadata
 
 from bodymocap.body_bbox_detector import BodyPoseEstimator
 from handmocap.hand_bbox_detector import HandBboxDetector
@@ -113,6 +114,9 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
     cur_frame = args.start_frame
     video_frame = 0
+    rotate = 0
+    if (input_type == 'video'):
+        rotate = metadata.getVideoRotate(args.input_path)
     while True:
         # load data
         load_bbox = False
@@ -177,7 +181,6 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
             args, img_original_bgr, 
             body_bbox_list, hand_bbox_list, bbox_detector,
             body_mocap, hand_mocap)
-
         # save the obtained body & hand bbox to json file
         if args.save_bbox_output: 
             demo_utils.save_info_to_json(args, image_path, body_bbox_list, hand_bbox_list)
@@ -191,14 +194,15 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         # visualization
         res_img = visualizer.visualize(
             img_original_bgr,
+            rotate = rotate,
             pred_mesh_list = pred_mesh_list,
             body_bbox_list = body_bbox_list,
             hand_bbox_list = hand_bbox_list)
         
        # show result in the screen
-        if not args.no_display:
-            res_img = res_img.astype(np.uint8)
-            ImShow(res_img)
+        #if not args.no_display:
+        #    res_img = res_img.astype(np.uint8)
+        #    ImShow(res_img)
 
         # save result image
         if args.out_dir is not None:
