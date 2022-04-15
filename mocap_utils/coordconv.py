@@ -29,6 +29,24 @@ def convert_smpl_to_bbox_torch(data3D, scale, trans, bAppTransFirst=False):
     # data3D[:,:2]*= resnet_input_size_half # 112 is originated from hrm's input size (224,24)
     return data3D
 
+def convert_bbox_to_oriIm_torch(data3D, boxScale_o2n, bboxTopLeft, imgSizeW, imgSizeH):
+    resnet_input_size_half = 224 *0.5
+    imgSize = np.array([imgSizeW,imgSizeH])
+    imgSize = torch.from_numpy(imgSize).cuda()
+    boxScale_o2n = torch.from_numpy(boxScale_o2n).cuda()
+    data3D /= boxScale_o2n
+
+    if not isinstance(bboxTopLeft, np.ndarray):
+        assert isinstance(bboxTopLeft, tuple)
+        assert len(bboxTopLeft) == 2
+        bboxTopLeft = np.array(bboxTopLeft)
+
+    bboxTopLeft = torch.from_numpy(bboxTopLeft).cuda()
+    
+    data3D[:,:2] += (bboxTopLeft + resnet_input_size_half/boxScale_o2n)
+
+    return data3D
+
 def convert_smpl_to_bbox(data3D, scale, trans, bAppTransFirst=False):
     data3D = data3D.copy()
     resnet_input_size_half = 224 *0.5
