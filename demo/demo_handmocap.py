@@ -131,7 +131,6 @@ def run_hand_mocap(args, bbox_detector, hand_mocap, visualizer):
                 img_original_bgr, hand_bbox_list, add_margin=True)
         assert len(hand_bbox_list) == len(body_bbox_list)
         assert len(body_bbox_list) == len(pred_output_list)
-
         # extract mesh for rendering (vertices in image space and faces) from pred_output_list
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
 

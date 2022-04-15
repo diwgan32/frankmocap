@@ -20,6 +20,8 @@ import mocap_utils.demo_utils as demo_utils
 import mocap_utils.general_utils as gnu
 from mocap_utils.timer import Timer
 from datetime import datetime
+import demo.get_video_metadata as metadata
+
 from bodymocap.body_bbox_detector import BodyPoseEstimator
 from handmocap.hand_bbox_detector import HandBboxDetector, Openpose_Hand_Detector
 from integration.copy_and_paste import integration_copy_paste
@@ -136,6 +138,9 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
     cur_frame = args.start_frame
     video_frame = 0
+    rotate = 0
+    if (input_type == 'video'):
+        rotate = metadata.getVideoRotate(args.input_path)
     while True:
         # load data
         load_bbox = False
@@ -231,6 +236,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         # visualization
         res_img = visualizer.visualize(
             img_original_bgr,
+            rotate = rotate,
             pred_mesh_list = pred_mesh_list,
             body_bbox_list = body_bbox_list,
             hand_bbox_list = hand_bbox_list)
