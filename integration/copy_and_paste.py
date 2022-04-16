@@ -211,6 +211,9 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, joints_hrnet_2d, smp
         pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
         print(pred_lhand_joints_img.shape)
+        params = [left_hand_pose]
+        optimizer = torch.optim.Adam(params, lr=.01, betas=(0.9, 0.999))
+
         loss = hand_fitting_loss(pred_lhand_joints_img, torch.from_numpy(joints_hrnet_2d[0]["keypoints"][:21]).cuda())
         pred_lhand_joints_img = pred_lhand_joints_img.detach().cpu().numpy()   
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
