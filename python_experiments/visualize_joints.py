@@ -4,8 +4,9 @@ import glob
 import matplotlib.pyplot as plt
 import cv2
 
-ROOT_FOLDER = "../handle_cans"
+ROOT_FOLDER = "../handle_cans_torch"
 VIDEO_LOC = "/Volumes/Samsung_T5/TestVideos/handle_cans.mp4"
+JOINTS_2D = "../handle_cans_hands.pkl"
 
 def generate_arrows(a, scores):
     # These are the joint connections pulled in by hand from joint definitions
@@ -70,7 +71,6 @@ def display_skeleton_3d(data):
         return
     #right_hand = data["pred_output_list"][0]["right_hand"]["pred_joints_img"]
     right_hand = data["pred_output_list"][0]["pred_rhand_joints_img"]
-    
     display_3d_joints(right_hand, fig, np.ones(right_hand.shape[0]), "red")
 
     #left_hand = data["pred_output_list"][0]["left_hand"]["pred_joints_img"]
@@ -78,7 +78,7 @@ def display_skeleton_3d(data):
     display_3d_joints(left_hand, fig, np.ones(left_hand.shape[0]), "blue")
     plt.show()
 
-def display_skeleton_2d(data, frame):
+def display_skeleton_2d(data, joints_2d_hrnet, frame):
     if not ("pred_output_list" in data):
         return
     if (len(data["pred_output_list"]) == 0):
@@ -86,22 +86,31 @@ def display_skeleton_2d(data, frame):
 
     right_hand = data["pred_output_list"][0]["pred_rhand_joints_img"]
     left_hand = data["pred_output_list"][0]["pred_lhand_joints_img"]
-    
+
+    left_hand_coco = joints_2d_hrnet[0]["keypoints"][21:, :]
+    print(left_hand_coco)
     frame = display_2d_joints(right_hand, frame, (255, 0, 0))
     frame = display_2d_joints(left_hand, frame, (0, 0, 255))
+    frame = display_2d_joints(left_hand_coco, frame, (0, 255, 255))
     cv2.imshow("asdf", frame)
     cv2.waitKey(0)
 
 if __name__ == "__main__":
     pickle_files = glob.glob(f"{ROOT_FOLDER}/mocap/*.pkl")
     pickle_files.sort()
+
+    f = open(JOINTS_2D, "rb")
+    joints_2d_hrnet = pickle.load(f)
+    f.close()
+
     cap = cv2.VideoCapture(VIDEO_LOC)
-        
+    i = 0
     for fname in pickle_files:
         ret, frame = cap.read()
         f = open(fname, "rb")
         data = pickle.load(f)
         f.close()
         #display_skeleton_3d(data)
-        display_skeleton_2d(data, frame)
+        display_skeleton_2d(data, joints_2d_hrnet[i], frame)
+        i += 1
     cap.release()

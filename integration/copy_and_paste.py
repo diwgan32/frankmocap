@@ -90,8 +90,15 @@ def transfer_rotation(
         return_value = return_value.numpy()
     return return_value
 
-def hand_fitting_loss(hand_pose, model_joints, camera_center,
-                      joints_2d, joints_conf, pose_prior,
+def gmof(x, sigma):
+    """
+    Geman-McClure error function
+    """
+    x_squared =  x ** 2
+    sigma_squared = sigma ** 2
+    return (sigma_squared * x_squared) / (sigma_squared + x_squared)
+
+def hand_fitting_loss(hand_pose, joints_2d,
                       focal_length=5000, sigma=100, pose_prior_weight=4.78,
                       shape_prior_weight=5, angle_prior_weight=15.2,
                       output='sum'):
@@ -99,11 +106,9 @@ def hand_fitting_loss(hand_pose, model_joints, camera_center,
     Loss function for body fitting
     """
 
-    batch_size = body_pose.shape[0]
-    
     # Weighted robust reprojection error
-    reprojection_error = gmof(projected_joints - joints_2d, sigma)
-    reprojection_loss = (joints_conf ** 2) * reprojection_error.sum(dim=-1)
+    reprojection_error = gmof(hand_pose - joints_2d, sigma)
+    reprojection_loss = reprojection_error.sum(dim=-1)
 
     total_loss = reprojection_loss.sum(dim=-1)
 
@@ -112,8 +117,10 @@ def hand_fitting_loss(hand_pose, model_joints, camera_center,
     elif output == 'reprojection':
         return reprojection_loss
 
-def optimization_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_shape):
+
+def optimization_copy_paste(pred_body_list, pred_hand_list, joints_hrnet_2d, smplx_model, image_shape):
     integral_output_list = list()
+    print(joints_hrnet_2d)
     for i in range(len(pred_body_list)):
         body_info = pred_body_list[i]
         hand_info = pred_hand_list[i]
@@ -205,6 +212,7 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, smplx_model, image_s
         pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
 
+        optimize_test(pred_lhand_joints_img, joints_2d)
         pred_lhand_joints_img = pred_lhand_joints_img.detach().cpu().numpy()   
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
 

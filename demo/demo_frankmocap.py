@@ -45,7 +45,7 @@ def __filter_bbox_list(body_bbox_list, hand_bbox_list, single_person):
 
 def run_regress(
     args, img_original_bgr, 
-    body_bbox_list, hand_bbox_list, bbox_detector,
+    body_bbox_list, hand_bbox_list, joints_hrnet_2d, bbox_detector,
     body_mocap, hand_mocap
 ):
     cond1 = len(body_bbox_list) > 0 and len(hand_bbox_list) > 0
@@ -103,7 +103,7 @@ def run_regress(
 
     # integration by copy-and-paste
     integral_output_list = optimization_copy_paste(
-        pred_body_list, pred_hand_list, body_mocap.smpl, img_original_bgr.shape)
+        pred_body_list, pred_hand_list, joints_hrnet_2d, body_mocap.smpl, img_original_bgr.shape)
     
     return body_bbox_list, hand_bbox_list, integral_output_list
 
@@ -117,6 +117,12 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
     rotate = 0
     if (input_type == 'video'):
         rotate = metadata.getVideoRotate(args.input_path)
+
+    f = open(args.hrnet_joints_loc, "rb")
+    joints_2d_hrnet = pickle.load(f)
+    f.close()
+    
+
     while True:
         # load data
         load_bbox = False
@@ -179,7 +185,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         # regression (includes integration)
         body_bbox_list, hand_bbox_list, pred_output_list = run_regress(
             args, img_original_bgr, 
-            body_bbox_list, hand_bbox_list, bbox_detector,
+            body_bbox_list, hand_bbox_list, joints_2d_hrnet[cur_frame], bbox_detector,
             body_mocap, hand_mocap)
         # save the obtained body & hand bbox to json file
         if args.save_bbox_output: 
@@ -236,6 +242,7 @@ def main():
     #Set Mocap regressor
     body_mocap = BodyMocap(args.checkpoint_body_smplx, args.smpl_dir, device = device, use_smplx= True)
     hand_mocap = HandMocap(args.checkpoint_hand, args.smpl_dir, device = device)
+
 
     # Set Visualizer
     if args.renderer_type in ['pytorch3d', 'opendr']:

@@ -52,6 +52,9 @@ class DemoOptions():
         # Whole motion capture (FrankMocap) specific options
         parser.add_argument('--frankmocap_fast_mode', action='store_true', help="Use fast hand detection mode for whole body motion capture (frankmocap)")
 
+        # Whole motion capture (FrankMocap) specific options
+        parser.add_argument('--hrnet_joints_loc', type=str, help="HRnet joints for optimization")
+
         # renderer
         parser.add_argument("--renderer_type", type=str, default="opengl", 
             choices=['pytorch3d', 'opendr', 'opengl_gui', 'opengl'], help="type of renderer to use")
