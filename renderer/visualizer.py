@@ -77,7 +77,8 @@ class Visualizer(object):
     #         assert False
 
     def visualize(self,
-        input_img, 
+        input_img,
+        rotate = 0,
         hand_bbox_list = None, 
         body_bbox_list = None,
         body_pose_list = None,
@@ -89,7 +90,7 @@ class Visualizer(object):
     ):
          # init
         res_img = input_img.copy()
-
+        
         # draw raw hand bboxes
         if raw_hand_bboxes is not None and vis_raw_hand_bbox:
             res_img = draw_raw_bbox(input_img, raw_hand_bboxes)
@@ -142,7 +143,7 @@ class Visualizer(object):
         return overlaidImg
 
 
-    def _visualize_screenless_naive(self, meshList, skelList=None, body_bbox_list=None, img_original=None, show_side = False, vis=False, maxHeight = 1080):
+    def _visualize_screenless_naive(self, meshList, skelList=None, body_bbox_list=None, img_original=None, show_side = False, vis=False, maxHeight = 1920):
         
         """
             args:

@@ -85,7 +85,7 @@ class SMPLX(_SMPLX):
         joints = joints[:, self.joint_map, :]     
 
         # Hand joints
-        smplx_hand_to_panoptic = [0,   13,14,15,16, 1,2,3,17, 4,5,6,18, 10,11,12,19, 7,8,9,20] #Wrist Thumb to Pinky
+        smplx_hand_to_panoptic = [0, 13,14,15,16, 1,2,3,17, 4,5,6,18, 10,11,12,19, 7,8,9,20] #Wrist Thumb to Pinky
 
         smplx_lhand =  [20] + list(range(25,40)) + list(range(66, 71))         #20 for left wrist. 20 finger joints
         lhand_joints = smpl_output.joints[:,smplx_lhand, :]      #(N,21,3)

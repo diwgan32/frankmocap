@@ -22,7 +22,7 @@ from mocap_utils.timer import Timer
 from datetime import datetime
 from bodymocap.body_bbox_detector import BodyPoseEstimator
 from handmocap.hand_bbox_detector import HandBboxDetector, Openpose_Hand_Detector
-from integration.copy_and_paste import integration_copy_paste
+from integration.copy_and_paste import integration_copy_paste, optimization_copy_paste
 from integration.eft import integration_eft_optimization
 
 
@@ -42,10 +42,8 @@ def __filter_bbox_list(body_bbox_list, hand_bbox_list, single_person):
 
 def run_regress(
     args, img_original_bgr, 
-    body_bbox_list, hand_bbox_list, bbox_detector,
-    body_mocap, hand_mocap,
-    openpose_file_path,
-    openpose_kp_imgcoord = None,  # Required for optimization-based integration
+    body_bbox_list, hand_bbox_list, joints_hrnet_2d, bbox_detector,
+    body_mocap, hand_mocap
 ):
     cond1 = len(body_bbox_list) > 0 and len(hand_bbox_list) > 0
     cond2 = not args.frankmocap_fast_mode
@@ -136,6 +134,15 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
     cur_frame = args.start_frame
     video_frame = 0
+    rotate = 0
+    if (input_type == 'video'):
+        rotate = metadata.getVideoRotate(args.input_path)
+
+    f = open(args.hrnet_joints_loc, "rb")
+    joints_2d_hrnet = pickle.load(f)
+    f.close()
+    
+
     while True:
         # load data
         load_bbox = False
@@ -214,10 +221,8 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         # openpose_imgcoord is required for optimization-based integration
         body_bbox_list, hand_bbox_list, pred_output_list = run_regress(
             args, img_original_bgr, 
-            body_bbox_list, hand_bbox_list, bbox_detector,
-            body_mocap, hand_mocap,
-            openpose_file_path, openpose_imgcoord)    
-
+            body_bbox_list, hand_bbox_list, joints_2d_hrnet[cur_frame], bbox_detector,
+            body_mocap, hand_mocap)
         # save the obtained body & hand bbox to json file
         if args.save_bbox_output: 
             demo_utils.save_info_to_json(args, image_path, body_bbox_list, hand_bbox_list)
@@ -231,15 +236,15 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         # visualization
         res_img = visualizer.visualize(
             img_original_bgr,
+            rotate = rotate,
             pred_mesh_list = pred_mesh_list,
             body_bbox_list = body_bbox_list,
             hand_bbox_list = hand_bbox_list)
-
+        
        # show result in the screen
-        if not args.no_display:
-            from renderer.viewer2D import ImShow
-            res_img = res_img.astype(np.uint8)
-            ImShow(res_img)
+        #if not args.no_display:
+        #    res_img = res_img.astype(np.uint8)
+        #    ImShow(res_img)
 
         # save result image
         if args.out_dir is not None:
@@ -274,6 +279,7 @@ def main():
     #Set Mocap regressor
     body_mocap = BodyMocap(args.checkpoint_body_smplx, args.smpl_dir, device = device, use_smplx= True)
     hand_mocap = HandMocap(args.checkpoint_hand, args.smpl_dir, device = device)
+
 
     # Set Visualizer
     if args.renderer_type in ['pytorch3d', 'opendr']:

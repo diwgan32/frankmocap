@@ -5,6 +5,7 @@ FrankMocap pursues an easy-to-use single view 3D motion capture system developed
 <b>Btw, why the name FrankMocap? </b> Our pipeline to integrate body and hand modules reminds us of [Frankenstein's monster](https://en.wikipedia.org/wiki/Frankenstein)!
 
 ### News:
+  - [2021/08/18] Our paper has been accepted to ICCV Workshop 2021.
   - [2020/10/09] We have improved openGL rendering speed. It's about 40% faster. (e.g., body module: 6fps -> 11fps)
 
 ## Key Features
@@ -28,7 +29,7 @@ FrankMocap pursues an easy-to-use single view 3D motion capture system developed
     <img src="https://github.com/jhugestar/jhugestar.github.io/blob/master/img/frankmocap_wholebody.gif" height="200">
 </p>
 <p>
-    <img src="https://penincillin.github.io/frank_mocap/video_02.gif" height="200">
+    <img src="https://penincillin.github.io/project/frankmocap_iccvw2021/video_02.gif" height="200">
 </p>
 
 
@@ -65,6 +66,10 @@ FrankMocap pursues an easy-to-use single view 3D motion capture system developed
 - Note: 
   - Above commands use openGL by default. If it does not work, you may try alternative renderers (pytorch3d or openDR). 
   - See the readme of each module for details
+  
+  
+## Joint Order
+- See [joint_order](docs/joint_order.md)
 
 
 ## Body Motion Capture Module
@@ -83,18 +88,18 @@ See the [LICENSE](LICENSE) file.
 ## References
 - FrankMocap is based on the following research outputs:
 ```
-@article{rong2020frankmocap,
-  title={FrankMocap: Fast Monocular 3D Hand and Body Motion Capture by Regression and Integration},
+@InProceedings{rong2021frankmocap,
+  title={FrankMocap: A Monocular 3D Whole-Body Pose Estimation System via Regression and Integration},
   author={Rong, Yu and Shiratori, Takaaki and Joo, Hanbyul},
-  journal={arXiv preprint arXiv:2008.08324},
-  year={2020}
+  booktitle={IEEE International Conference on Computer Vision Workshops},
+  year={2021}
 }
 
 @article{joo2020eft,
   title={Exemplar Fine-Tuning for 3D Human Pose Fitting Towards In-the-Wild 3D Human Pose Estimation},
   author={Joo, Hanbyul and Neverova, Natalia and Vedaldi, Andrea},
-  journal={arXiv preprint arXiv:2004.03686},
-  year={2020}
+  journal={3DV},
+  year={2021}
 }
 ```
 

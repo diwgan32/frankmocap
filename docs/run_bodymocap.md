@@ -79,7 +79,7 @@ For our body mocap module, we use [HMR](https://akanazawa.github.io/hmr/) networ
     ```
     {"image_path": "xxx.jpg", "hand_bbox_list":[{"left_hand":[x,y,w,h], "right_hand":[x,y,w,h]}], "body_bbox_list":[[x,y,w,h]]}
     ```
-    - Note that bbox format is [min_x, min_y, max_x, max_y]
+    - Note that bbox format is [min_x, min_y, width, height]
 - For example
     ```
     {"image_path": "./sample_data/images/cj_dance_01_03_1_00075.png", "body_bbox_list": [[149, 380, 242, 565]], "hand_bbox_list": [{"left_hand": [288.9151611328125, 376.70184326171875, 39.796295166015625, 51.72357177734375], "right_hand": [234.97779846191406, 363.4115295410156, 50.28489685058594, 57.89691162109375]}]}
@@ -90,7 +90,6 @@ For our body mocap module, we use [HMR](https://akanazawa.github.io/hmr/) networ
 - `--input_path webcam`: Run demo for a video file  (without using `--vPath` option)
 - `--input_path /your/path/video.mp4`: Run demo for a video file (mp4, avi, mov)
 - `--input_path /your/dirPath`: Run demo for a folder that contains image seqeunces
-- `--input_path /your/imagepath.jpg`: Run demo for an image (jpg, jpeg, png, bmp)
 - `--input_path /your/bboxDirPath`: Run demo for a folder that contains bbox json files. See [bbox format](https://github.com/facebookresearch/eft/blob/master/docs/README_dataformat.md#bbox-format-json)
 
 ### Output Options
