@@ -107,7 +107,7 @@ def hand_fitting_loss(hand_pose, joints_2d,
     """
 
     # Weighted robust reprojection error
-    reprojection_error = gmof(hand_pose - joints_2d, sigma)
+    reprojection_error = gmof(hand_pose[:, :2] - joints_2d[:, :2], sigma)
     reprojection_loss = reprojection_error.sum(dim=-1)
 
     total_loss = reprojection_loss.sum(dim=-1)
@@ -120,7 +120,6 @@ def hand_fitting_loss(hand_pose, joints_2d,
 
 def optimization_copy_paste(pred_body_list, pred_hand_list, joints_hrnet_2d, smplx_model, image_shape):
     integral_output_list = list()
-    print(joints_hrnet_2d)
     for i in range(len(pred_body_list)):
         body_info = pred_body_list[i]
         hand_info = pred_hand_list[i]
@@ -211,8 +210,8 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, joints_hrnet_2d, smp
             smplx_output.left_hand_joints[0], camScale, camTrans)
         pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
-
-        optimize_test(pred_lhand_joints_img, joints_2d)
+        print(pred_lhand_joints_img.shape)
+        loss = hand_fitting_loss(pred_lhand_joints_img, torch.from_numpy(joints_hrnet_2d[0]["keypoints"][:21]).cuda())
         pred_lhand_joints_img = pred_lhand_joints_img.detach().cpu().numpy()   
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
 
