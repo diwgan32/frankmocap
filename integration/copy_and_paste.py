@@ -210,11 +210,75 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, joints_hrnet_2d, smp
             smplx_output.left_hand_joints[0], camScale, camTrans)
         pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
-        print(pred_lhand_joints_img.shape)
+
         params = [left_hand_pose]
         optimizer = torch.optim.Adam(params, lr=.01, betas=(0.9, 0.999))
+        joints_2d = torch.from_numpy(joints_hrnet_2d[0]["keypoints"][:21]).cuda()
+        joints_2d.requires_grad = False
+        for i in range(100):
+            
+            loss = hand_fitting_loss(pred_lhand_joints_img, joints_2d)
 
-        loss = hand_fitting_loss(pred_lhand_joints_img, torch.from_numpy(joints_hrnet_2d[0]["keypoints"][:21]).cuda())
+            print(loss)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            smplx_output = smplx_model(
+                betas = pred_betas, 
+                body_pose = pred_aa[:,3:], 
+                global_orient = pred_aa[:,:3],
+                right_hand_pose = right_hand_pose, 
+                left_hand_pose= left_hand_pose,
+                pose2rot = True)
+
+            pred_vertices = smplx_output.vertices
+            pred_vertices = pred_vertices[0].detach().cpu().numpy()
+            pred_body_joints = smplx_output.joints
+            pred_body_joints = pred_body_joints[0].detach().cpu().numpy()   
+            pred_lhand_joints = smplx_output.left_hand_joints
+            pred_lhand_joints = pred_lhand_joints[0].detach().cpu().numpy()
+            pred_rhand_joints = smplx_output.right_hand_joints
+            pred_rhand_joints = pred_rhand_joints[0].detach().cpu().numpy()
+
+            camScale = body_info['pred_camera'][0]
+            camTrans = body_info['pred_camera'][1:]
+            bbox_top_left = body_info['bbox_top_left']
+            bbox_scale_ratio = body_info['bbox_scale_ratio']
+
+            integral_output = dict()
+            integral_output['pred_vertices_smpl'] = pred_vertices
+            integral_output['faces'] = smplx_model.faces
+            integral_output['bbox_scale_ratio'] = bbox_scale_ratio
+            integral_output['bbox_top_left'] = bbox_top_left
+            integral_output['pred_camera'] = body_info['pred_camera']
+
+            pred_aa_tensor = gu.rotation_matrix_to_angle_axis(pred_rotmat.detach().cpu()[0])
+            integral_output['pred_body_pose'] = pred_aa_tensor.cpu().numpy().reshape(1, 72)
+            integral_output['pred_betas'] = pred_betas.detach().cpu().numpy()
+
+            # convert mesh to original image space (X,Y are aligned to image)
+            pred_vertices_bbox = convert_smpl_to_bbox_torch(
+                smplx_output.vertices[0], camScale, camTrans)
+            pred_vertices_img = convert_bbox_to_oriIm_torch(
+                pred_vertices_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+            integral_output['pred_vertices_img'] = pred_vertices_img.detach().cpu().numpy()
+
+
+            # convert joints to original image space (X, Y are aligned to image)
+            pred_body_joints_bbox = convert_smpl_to_bbox_torch(
+                smplx_output.joints[0], camScale, camTrans)
+            pred_body_joints_img = convert_bbox_to_oriIm_torch(
+                pred_body_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+            integral_output['pred_body_joints_img'] = pred_body_joints_img.detach().cpu().numpy()
+
+            pred_lhand_joints_bbox = convert_smpl_to_bbox_torch(
+                smplx_output.left_hand_joints[0], camScale, camTrans)
+            pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
+                pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+            print(pred_lhand_joints_img.shape)
+        
+
         pred_lhand_joints_img = pred_lhand_joints_img.detach().cpu().numpy()   
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
 
