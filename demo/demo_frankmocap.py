@@ -117,7 +117,7 @@ def run_regress(
         assert len(hand_bbox_list) == len(pred_hand_list) 
 
     # integration by copy-and-paste
-    if args.integrate_type=='copy_paste':
+    if args.integrate_type=='copy_paste' or openpose_kp_imgcoord is None:
         print("Run copy-paste integration")
         integral_output_list = integration_copy_paste(
             pred_body_list, pred_hand_list, body_mocap.smpl, img_original_bgr.shape)
@@ -165,7 +165,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
                 print(f"Loading openpose data from: {openpose_file_path}")
                 # TODO: this works for single person in the image
                 openpose_imgcoord, _ = demo_utils.read_openpose_wHand(openpose_file_path, dataset='coco')
-                assert openpose_imgcoord is not None
+#                assert openpose_imgcoord is not None
 
         elif input_type == 'bbox_dir':
             if cur_frame < len(input_data):
