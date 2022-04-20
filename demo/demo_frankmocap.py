@@ -42,7 +42,7 @@ def __filter_bbox_list(body_bbox_list, hand_bbox_list, single_person):
 
 def run_regress(
     args, img_original_bgr, 
-    body_bbox_list, hand_bbox_list, joints_hrnet_2d, bbox_detector,
+    body_bbox_list, hand_bbox_list, openpose_kp_imgcoord, bbox_detector,
     body_mocap, hand_mocap
 ):
     cond1 = len(body_bbox_list) > 0 and len(hand_bbox_list) > 0
@@ -142,7 +142,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
     joints_2d_hrnet = pickle.load(f)
     f.close()
     
-
+    img_frame = 0
     while True:
         # load data
         load_bbox = False
@@ -156,7 +156,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
             else:
                 img_original_bgr = None
 
-            if args.use_openpose_bbox or args.integrate_type == 'opt':
+            if args.use_openpose_bbox:
                 # Note: current openpose name should be {raw_image_name}_keypoints.json
                 f_name = os.path.basename(image_path)[:-4] + "_keypoints.json"
                 openpose_file_path = os.path.join(args.openpose_dir, f_name)
@@ -166,8 +166,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
             if args.integrate_type=='opt':
                 print(f"Loading openpose data from: {openpose_file_path}")
                 # TODO: this works for single person in the image
-                openpose_imgcoord, _ = demo_utils.read_openpose_wHand(openpose_file_path, dataset='coco')
-                assert openpose_imgcoord is not None
+                openpose_imgcoord = demo_utils.read_hrnet_wHand(joints_2d_hrnet[img_frame])
 
         elif input_type == 'bbox_dir':
             if cur_frame < len(input_data):
@@ -221,7 +220,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         # openpose_imgcoord is required for optimization-based integration
         body_bbox_list, hand_bbox_list, pred_output_list = run_regress(
             args, img_original_bgr, 
-            body_bbox_list, hand_bbox_list, joints_2d_hrnet[cur_frame], bbox_detector,
+            body_bbox_list, hand_bbox_list, openpose_kp_imgcoord, bbox_detector,
             body_mocap, hand_mocap)
         # save the obtained body & hand bbox to json file
         if args.save_bbox_output: 

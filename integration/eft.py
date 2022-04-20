@@ -35,14 +35,6 @@ def integration_eft_optimization(
     for key in ['pose_keypoints_2d', 'hand_right_keypoints_2d', 'hand_left_keypoints_2d']:
         openpose_bboxNormcoord[key] = j2d_normalize(openpose_kp_imgcoord[key], bboxInfo['center'], bboxInfo['scale'])[np.newaxis,:]
     
-    if False:
-        # img_vis = viewer2D.Vis_Skeleton_2D_general(smpl_output_imgspace['body_joints'][:,:2], image =raw_image, offsetXY = np.array( (raw_image.shape[1], raw_image.shape[0]) )*0.5)
-        raw_image_vis = img_original_bgr.copy()
-        raw_image_vis = viewer2D.Vis_Skeleton_2D_Openpose25(openpose_kp_imgcoord['pose_keypoints_2d'][:,:2], openpose_kp_imgcoord['pose_keypoints_2d'][:,2],image =raw_image_vis)
-        raw_image_vis = viewer2D.Vis_Skeleton_2D_Openpose_hand(openpose_kp_imgcoord['hand_right_keypoints_2d'][:,:2], openpose_kp_imgcoord['hand_right_keypoints_2d'][:,2],image =raw_image_vis)
-        raw_image_vis = viewer2D.Vis_Skeleton_2D_Openpose_hand(openpose_kp_imgcoord['hand_left_keypoints_2d'][:,:2], openpose_kp_imgcoord['hand_left_keypoints_2d'][:,2],image =raw_image_vis)
-        viewer2D.ImShow(raw_image_vis, waitTime=0, name="raw_openpose")
-
     if is_vis:    
         import renderer.viewer2D as viewer2D 
         #Visualize Bbox and Openpose
