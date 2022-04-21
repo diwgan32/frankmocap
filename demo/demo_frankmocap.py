@@ -20,6 +20,8 @@ import mocap_utils.demo_utils as demo_utils
 import mocap_utils.general_utils as gnu
 from mocap_utils.timer import Timer
 from datetime import datetime
+import demo.get_video_metadata as metadata
+
 from bodymocap.body_bbox_detector import BodyPoseEstimator
 from handmocap.hand_bbox_detector import HandBboxDetector, Openpose_Hand_Detector
 from integration.copy_and_paste import integration_copy_paste
@@ -113,7 +115,7 @@ def run_regress(
         assert len(hand_bbox_list) == len(pred_hand_list) 
 
     # integration by copy-and-paste
-    if args.integrate_type=='copy_paste':
+    if args.integrate_type=='copy_paste' or openpose_kp_imgcoord is None:
         print("Run copy-paste integration")
         integral_output_list = integration_copy_paste(
             pred_body_list, pred_hand_list, body_mocap.smpl, img_original_bgr.shape)
@@ -158,7 +160,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
             if args.use_openpose_bbox:
                 # Note: current openpose name should be {raw_image_name}_keypoints.json
-                f_name = os.path.basename(image_path)[:-4] + "_keypoints.json"
+                f_name = os.path.basename(image_path)[:-13] + "_keypoints.json"
                 openpose_file_path = os.path.join(args.openpose_dir, f_name)
                 assert os.path.exists(openpose_file_path), openpose_file_path
 

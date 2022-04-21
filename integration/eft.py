@@ -50,7 +50,7 @@ def integration_eft_optimization(
 
     #Run EFT iterations
     integral_output_list = list()
-    assert len(pred_body_list)==1 , print("optimization-based integration mode is only valid for a single person only images ") 
+#    assert len(pred_body_list)==1 , print("optimization-based integration mode is only valid for a single person only images ") 
     for i in range(len(pred_body_list)):
         body_info = pred_body_list[i]
         hand_info = pred_hand_list[i]
