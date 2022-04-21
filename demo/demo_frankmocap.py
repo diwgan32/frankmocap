@@ -158,12 +158,13 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
             else:
                 img_original_bgr = None
 
-            if args.use_openpose_bbox:
+            if args.use_openpose_bbox or args.use_hrnet_bbox:
                 # Note: current openpose name should be {raw_image_name}_keypoints.json
-                f_name = os.path.basename(image_path)[:-13] + "_keypoints.json"
-                openpose_file_path = os.path.join(args.openpose_dir, f_name)
-                assert os.path.exists(openpose_file_path), openpose_file_path
-
+                openpose_imgcoord = demo_utils.read_hrnet_wHand(joints_2d_hrnet[img_frame])
+                hand_bbox_list = demo_utils.get_hrnet_hand_bbox(openpose_imgcoord, img_original_bgr.shape)
+                body_bbox_list = demo_utils.get_hrnet_person_bbox(openpose_imgcoord, img_original_bgr.shape)
+                load_bbox = True
+                
             # Optimization based integration. This requires openpose prediction
             if args.integrate_type=='opt':
                 print(f"Loading openpose data from: {openpose_file_path}")
