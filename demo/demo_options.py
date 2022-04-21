@@ -61,6 +61,8 @@ class DemoOptions():
         parser.add_argument('--hrnet_joints_loc', type=str, help="HRnet joints for optimization")
         # use openpose bbox for detection
         parser.add_argument('--use_openpose_bbox', action='store_true', help="Use hand bounding bbox obtained from openpose")
+        # use hrnet bbox for detection
+        parser.add_argument('--use_hrnet_bbox', action='store_true', help="Use hand bounding bbox obtained from hrnet")
 
         # renderer
         parser.add_argument("--renderer_type", type=str, default="opengl", 

@@ -319,6 +319,28 @@ def gen_video_out(out_dir, seq_name):
     # sp.run(ffmpeg_cmd.split())
     # sp.Popen(ffmpeg_cmd.split(), stdout=sp.PIPE, stderr=sp.PIPE)
 
+def get_hrnet_bbox_helper(joints, frame_shape):
+    x_min = int(max(np.min(joints[:, 0]) - 30, 0))
+    x_max = int(min(np.max(joints[:, 0]) + 30, frame_shape[1]))
+    y_min = int(max(np.min(joints[:, 1]) - 30, 0))
+    y_max = int(min(np.max(joints[:, 1]) + 30, frame_shape[0]))
+    return [x_min, y_min, x_max - x_min, y_max - y_min]
+
+def get_hrnet_hand_bbox(op_output, frame_shape):
+    ret = []
+    ret.append({})
+    right_hand = op_output["hand_right_keypoints_2d"]
+    ret[0]["right_hand"] = get_hrnet_bbox_helper(right_hand, frame_shape)
+    right_hand = op_output["hand_left_keypoints_2d"]
+    ret[0]["left_hand"] = get_hrnet_bbox_helper(left_hand, frame_shape)
+    return ret
+
+def get_hrnet_person_bbox(op_output, frame_shape):
+    ret = []
+    kpts = op_output["pose_keypoints_2d"]
+    ret.append(get_hrnet_bbox_helper(kpts, frame_shape))
+    return ret
+
 def read_hrnet_wHand(joint_data, gt_part=None, dataset=None):
 
     if gt_part is None:
