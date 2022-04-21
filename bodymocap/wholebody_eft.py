@@ -192,6 +192,8 @@ class Whole_Body_EFT():
         init_rotmat = input_batch['init_rotmat']# 2D keypoints           #[N,49,3]  or [N,25,3]
 
         # body joints
+        print(pred_keypoints_2d, gt_keypoints_2d)
+        input("?")
         loss_keypoints_2d = self.keypoint_loss_openpose25(pred_keypoints_2d, gt_keypoints_2d, 1.0)
 
         # hand joints
