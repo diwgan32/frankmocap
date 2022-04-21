@@ -169,7 +169,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
                 print(f"Loading openpose data from: {openpose_file_path}")
                 # TODO: this works for single person in the image
                 openpose_imgcoord = demo_utils.read_hrnet_wHand(joints_2d_hrnet[img_frame])
-
+                img_frame += 1
         elif input_type == 'bbox_dir':
             if cur_frame < len(input_data):
                 image_path = input_data[cur_frame]['image_path']
