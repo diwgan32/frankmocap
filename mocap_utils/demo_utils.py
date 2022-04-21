@@ -342,7 +342,7 @@ def read_hrnet_wHand(joint_data, gt_part=None, dataset=None):
     r_shoulder = joint_data["keypoints"][0][6]
     l_hip = joint_data["keypoints"][0][11]
     r_hip = joint_data["keypoints"][0][12]
-    op_output["pose_keypoints_2d"] = joint_data["keypoints"][0][[0, -1, 5, 7, 9, 6, 8, 10, -1, 11, 13, 15, 12, 14, 16, 1, 2, 3, 4, 21, 20, 22, 18, 17, 19]]
+    op_output["pose_keypoints_2d"] = joint_data["keypoints"][0][[0, -1, 6, 8, 10, 5, 7, 9,  -1, 12, 14, 16, 11, 13, 15, 2, 1, 4, 3, 17, 18, 19, 20, 21, 22]]
     op_output["pose_keypoints_2d"][1] = (l_shoulder + r_shoulder)/2.0
     op_output["pose_keypoints_2d"][8] = (l_hip + r_hip)/2.0
 
