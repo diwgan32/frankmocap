@@ -22,7 +22,7 @@ from mocap_utils.timer import Timer
 from datetime import datetime
 from bodymocap.body_bbox_detector import BodyPoseEstimator
 from handmocap.hand_bbox_detector import HandBboxDetector, Openpose_Hand_Detector
-from integration.copy_and_paste import integration_copy_paste, optimization_copy_paste
+from integration.copy_and_paste import integration_copy_paste
 from integration.eft import integration_eft_optimization
 
 
@@ -220,7 +220,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         # openpose_imgcoord is required for optimization-based integration
         body_bbox_list, hand_bbox_list, pred_output_list = run_regress(
             args, img_original_bgr, 
-            body_bbox_list, hand_bbox_list, openpose_kp_imgcoord, bbox_detector,
+            body_bbox_list, hand_bbox_list, openpose_imgcoord, bbox_detector,
             body_mocap, hand_mocap)
         # save the obtained body & hand bbox to json file
         if args.save_bbox_output: 

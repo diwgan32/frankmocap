@@ -328,8 +328,6 @@ def read_hrnet_wHand(joint_data, gt_part=None, dataset=None):
     op_output ={}
 
     # read the openpose detection
-    if os.path.exists(json_file)==False:
-        return None, None
     if len(joint_data) == 0:
         # no openpose detection
         # keyp25 = np.zeros([25,3])
@@ -337,18 +335,19 @@ def read_hrnet_wHand(joint_data, gt_part=None, dataset=None):
     else:
         # size of person in pixels
         
-    op_output["pose_keypoints_2d"] = np.zeros((25, 3))
-    l_shoulder = joint_data["keypoints"][0][5]
-    r_shoulder = joint_data["keypoints"][0][6]
-    l_hip = joint_data["keypoints"][0][11]
-    r_hip = joint_data["keypoints"][0][12]
-    op_output["pose_keypoints_2d"] = joint_data["keypoints"][0][[0, -1, 6, 8, 10, 5, 7, 9,  -1, 12, 14, 16, 11, 13, 15, 2, 1, 4, 3, 17, 18, 19, 20, 21, 22]]
-    op_output["pose_keypoints_2d"][1] = (l_shoulder + r_shoulder)/2.0
-    op_output["pose_keypoints_2d"][8] = (l_hip + r_hip)/2.0
+        op_output["pose_keypoints_2d"] = np.zeros((25, 3))
+        l_shoulder = joint_data[0]["keypoints"][5]
+        r_shoulder = joint_data[0]["keypoints"][6]
+        l_hip = joint_data[0]["keypoints"][11]
+        r_hip = joint_data[0]["keypoints"][12]
+        op_output["pose_keypoints_2d"] = joint_data[0]["keypoints"[[0, -1, 6, 8, 10, 5, 7, 9,  -1, 12, 14, 16, 11, 13, 15, 2, 1, 4, 3, 17, 18, 19, 20, 21, 22]]
+        op_output["pose_keypoints_2d"][1] = (l_shoulder + r_shoulder)/2.0
+        op_output["pose_keypoints_2d"][8] = (l_hip + r_hip)/2.0
 
-    op_output["hand_right_keypoints_2d"] = joint_data["keypoints"][0][112:112+21]
-    op_output["hand_left_keypoints_2d"] = joint_data["keypoints"][0][91:91+21]
-    return op_output,  people[p_select]
+        op_output["hand_right_keypoints_2d"] = joint_data[0]["keypoints"][112:112+21]
+        op_output["hand_left_keypoints_2d"] = joint_data[0]["keypoints"][91:91+21]
+    return op_output 
+
 
 def read_openpose_wHand(json_file, gt_part=None, dataset=None):
 
