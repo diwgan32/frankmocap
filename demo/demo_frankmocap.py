@@ -145,6 +145,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
     f.close()
     
     img_frame = 0
+    pred_list = []
     while True:
         # load data
         load_bbox = False
@@ -185,6 +186,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
             _, img_original_bgr = input_data.read()
             if video_frame < cur_frame:
                 video_frame += 1
+                pred_list.append([])
                 continue
           # save the obtained video frames
             image_path = osp.join(args.out_dir, "frames", f"{cur_frame:05d}.jpg")
@@ -199,6 +201,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
             if video_frame < cur_frame:
                 video_frame += 1
+                pred_list.append([])
                 continue
             # save the obtained video frames
             image_path = osp.join(args.out_dir, "frames", f"scene_{cur_frame:05d}.jpg")
@@ -231,10 +234,11 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
         if len(body_bbox_list) < 1: 
             print(f"No body deteced: {image_path}")
+            pred_list.append([])
             continue
 
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
-
+        pred_list.append(pred_output_list)
         # visualization
         res_img = visualizer.visualize(
             img_original_bgr,
@@ -242,7 +246,7 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
             pred_mesh_list = pred_mesh_list,
             body_bbox_list = body_bbox_list,
             hand_bbox_list = hand_bbox_list)
-        
+       
        # show result in the screen
         #if not args.no_display:
         #    res_img = res_img.astype(np.uint8)
@@ -259,11 +263,15 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
                 args, demo_type, image_path, body_bbox_list, hand_bbox_list, pred_output_list)
 
         print(f"Processed : {image_path}")
+        if(cur_frame > 100): break 
+    
 
     # save images as a video
     if not args.no_video_out and input_type in ['image_dir','video', 'webcam']:
         demo_utils.gen_video_out(args.out_dir, args.seq_name)
-
+    fname = f"{args.out_dir}/output.pkl"
+    with open(fname, 'wb') as outfile:
+        pickle.dump(pred_list, outfile)
     if input_type =='webcam' and input_data is not None:
         input_data.release()
     cv2.destroyAllWindows()

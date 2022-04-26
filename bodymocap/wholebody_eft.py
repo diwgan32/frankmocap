@@ -5,6 +5,7 @@ import cv2
 import torch
 import numpy as np
 import pdb
+import time
 # from eft.eftSingleView import EFTFitterHMR, process_image
 # from fairmocap.utils.geometry import weakProjection_gpu
 # from renderer import viewer2D,glViewer
@@ -362,9 +363,9 @@ class Whole_Body_EFT():
 
 
     def eft_run(self, input_batch, eftIterNum = 20, is_vis= False):
-
+        t = time.time()
         self.reloadModel()
-        
+         
         self.model_regressor.train()
         self.exemplerTrainingMode()
         # self.exemplerTrainingMode()
@@ -372,33 +373,34 @@ class Whole_Body_EFT():
         # input_batch['img_norm'] = input_batch['img_norm'].to(self.device) # input image
         # input_batch['keypoints_2d'] = input_batch['keypoints_2d'].to(self.device) # input image
 
-        for _ in range(eftIterNum):
+        for _ in range(int(eftIterNum/2)):
             pred_rotmat, pred_betas, pred_camera  = self.eftStep(input_batch, is_vis=is_vis)
 
         # Reset Model
         self.reloadModel()
-
+        print(f"Time: {time.time()-t}")
         return pred_rotmat, pred_betas, pred_camera
 
 
     def eftStep(self, input_batch, is_vis=False, bNoHand = False, bNoLegs = True, visDebugPause= True):
 
         # Get data from the batch
+        t = time.time()
         images = input_batch['img'].to(self.device) # input image
         batch_size = images.shape[0]
-
+        t1 = time.time()
         # Run prediction
         pred_rotmat, pred_betas, pred_camera = self.model_regressor(images)
-
+        #print(f"Forward time: {time.time() - t1}") 
         # calculate loss
         loss, pred_smpl_output, hand_mesh_debug = self.compute_loss(input_batch, pred_rotmat, pred_betas, pred_camera)
         # print(f"EFTstep>> loss: {loss}")
-
+        t2 = time.time()
         # Do backprop
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
+        #print(f"Backward time: {time.time() - t2}")
         if is_vis:
             self.vis_eft_step_output(input_batch, pred_camera, pred_smpl_output, hand_mesh_debug)
 
