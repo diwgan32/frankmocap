@@ -110,8 +110,10 @@ def hand_fitting_loss(hand_pose, joints_2d,
     reprojection_error = gmof(hand_pose[:, :2] - joints_2d[:, :2], sigma)
     reprojection_error = torch.mul(reprojection_error, joints_2d[:, 2][:, None])
     reprojection_loss = reprojection_error.sum(dim=-1)
+    shape_prior_loss = (shape_prior_weight ** 2) * (hand_pose ** 2).sum(dim=-1)
 
-    total_loss = reprojection_loss.sum(dim=-1)
+
+    total_loss = reprojection_loss.sum(dim=-1) + shape_prior_loss
 
     if output == 'sum':
         return total_loss.sum()
