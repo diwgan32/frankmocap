@@ -373,7 +373,7 @@ class Whole_Body_EFT():
         # input_batch['img_norm'] = input_batch['img_norm'].to(self.device) # input image
         # input_batch['keypoints_2d'] = input_batch['keypoints_2d'].to(self.device) # input image
 
-        for _ in range(int(eftIterNum/2)):
+        for _ in range(int(eftIterNum)):
             pred_rotmat, pred_betas, pred_camera  = self.eftStep(input_batch, is_vis=is_vis)
 
         # Reset Model

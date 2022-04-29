@@ -263,7 +263,6 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
                 args, demo_type, image_path, body_bbox_list, hand_bbox_list, pred_output_list)
 
         print(f"Processed : {image_path}")
-        if(cur_frame > 100): break 
     
 
     # save images as a video
