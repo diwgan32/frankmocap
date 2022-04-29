@@ -108,6 +108,7 @@ def hand_fitting_loss(hand_pose, joints_2d,
 
     # Weighted robust reprojection error
     reprojection_error = gmof(hand_pose[:, :2] - joints_2d[:, :2], sigma)
+    reprojection_error = torch.mul(reprojection_error, joints_2d[:, 2][:, None])
     reprojection_loss = reprojection_error.sum(dim=-1)
 
     total_loss = reprojection_loss.sum(dim=-1)
@@ -223,20 +224,26 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, joints_hrnet_2d, smp
             smplx_output.left_hand_joints[0], camScale, camTrans)
         pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
-        
+        pred_rhand_joints_bbox = convert_smpl_to_bbox_torch(
+            smplx_output.right_hand_joints[0], camScale, camTrans)
+        pred_rhand_joints_img = convert_bbox_to_oriIm_torch(
+            pred_rhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
+
         params = [left_hand_pose, right_hand_pose, pred_aa, pred_betas]
         optimizer = torch.optim.Adam(params, lr=.01, betas=(0.9, 0.999))
-        joints_2d = torch.from_numpy(joints_hrnet_2d[0]["keypoints"][:21]).cuda()
+        joints_2d = torch.from_numpy(joints_hrnet_2d[0]["keypoints"][91:91+21]).cuda()
+        joints_2d_r = torch.from_numpy(joints_hrnet_2d[0]["keypoints"][112:112+21]).cuda()
 #        joints_2d.requires_grad = False
         left_hand_pose.requires_grad = True
         right_hand_pose.requires_grad = True
-        for i in range(100):
+        for i in range(50):
             
-            loss = hand_fitting_loss(pred_lhand_joints_img, joints_2d)
+            loss = hand_fitting_loss(pred_lhand_joints_img, joints_2d) + hand_fitting_loss(pred_rhand_joints_img, joints_2d_r) 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
+#            print(loss)
+#            input("?")
             smplx_output = smplx_model(
                 betas = pred_betas, 
                 body_pose = pred_aa[:,3:], 
@@ -289,7 +296,10 @@ def optimization_copy_paste(pred_body_list, pred_hand_list, joints_hrnet_2d, smp
                 smplx_output.left_hand_joints[0], camScale, camTrans)
             pred_lhand_joints_img = convert_bbox_to_oriIm_torch(
                 pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
-
+            pred_rhand_joints_bbox = convert_smpl_to_bbox_torch(
+                smplx_output.right_hand_joints[0], camScale, camTrans)
+            pred_rhand_joints_img = convert_bbox_to_oriIm_torch(
+                pred_rhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
         pred_lhand_joints_img = pred_lhand_joints_img.detach().cpu().numpy()   
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
 
