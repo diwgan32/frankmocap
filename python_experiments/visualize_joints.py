@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import cv2
 import time
 from angles import get_flexion_angle
+from filter import smoothArray
+import core_constants
 
-ROOT_FOLDER = "../hand_occlusion_hrnet"
+ROOT_FOLDER = "../wrist_rom/"
 VIDEO_LOC = "/Volumes/Samsung_T5/TestVideos/hand_occlusion_hrnet"
 JOINTS_2D = "../handle_cans_hands.pkl"
 JOINTS_3D = "../hand_view_3d.p"
@@ -174,26 +176,29 @@ def display_skeleton_2d(data, joints_2d_hrnet, frame):
     cv2.waitKey(0)
 
 def display_full_body_3d(hand_data, body_data, frame_idx):
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.set_title(f"Frame: {i}")
-    # if (len(body_data) == 0):
-    #     plt.show()
-    #     return
-    body = hand_data["pred_output_list"][0]["pred_joints_img"]
-    # print(body.shape)
-    # #body = body_data[0]["keypoints_3d"]
-    # display_body_skeleton_3d(body, fig=fig)
-    # left_wrist = body[7]
-    # right_wrist = body[4]
-    # display_hand_skeleton_3d(hand_data, left_wrist, right_wrist, fig=fig)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_title(f"Frame: {i}")
+    if (len(body_data) == 0):
+        plt.show()
+        return np.nan, np.nan
+    if not ("pred_vertices_img" in hand_data["pred_output_list"][0]):
+        return np.nan, np.nan
+        plt.show()
+    body = hand_data["pred_output_list"][0]["pred_vertices_img"]
+    #body = body_data[0]["keypoints_3d"]
+    display_body_skeleton_3d(body, fig=fig)
+    left_wrist = body[7]
+    right_wrist = body[4]
+    display_hand_skeleton_3d(hand_data, left_wrist, right_wrist, fig=fig)
     left_hand = data["pred_output_list"][0]["pred_lhand_joints_img"]
     right_hand = data["pred_output_list"][0]["pred_rhand_joints_img"]
 
     l_angle = get_flexion_angle(body[7], body[6], left_hand[7], left_hand[10], left_hand[4], left_hand[1])
     r_angle = get_flexion_angle(body[4], body[3], right_hand[7], right_hand[10], right_hand[4], right_hand[1])
-    print(l_angle)
-    #plt.show()
+    plt.show()
+    return l_angle, r_angle
+    
 
 if __name__ == "__main__":
     pickle_files = glob.glob(f"{ROOT_FOLDER}/mocap/*.pkl")
@@ -207,14 +212,22 @@ if __name__ == "__main__":
     joints_3d = pickle.load(f)
     f.close()
     cap = cv2.VideoCapture(VIDEO_LOC)
+    angles = []
     i = 0
     for fname in pickle_files:
         ret, frame = cap.read()
         f = open(fname, "rb")
         data = pickle.load(f)
         f.close()
-        display_full_body_3d(data, joints_3d[i], i)
+        l_angle, r_angle = display_full_body_3d(data, joints_3d[i], i)
+        print(l_angle, r_angle)
+        angles.append([l_angle, r_angle])
         #display_skeleton_2d(data, joints_2d_hrnet[i], frame)
         i += 1
+    angles = np.array(angles)
+    smoothed = smoothArray(angles[:, 1], 5)
+    plt.plot(range(angles.shape[0]), angles[:, 1])
+    plt.plot(range(angles.shape[0]), smoothed)
+    plt.show()
     print(f"{i}, {time.time() - t}")
     cap.release()
