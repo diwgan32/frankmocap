@@ -184,17 +184,22 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
         elif input_type == 'video':      
             _, img_original_bgr = input_data.read()
-            if video_frame < cur_frame:
-                video_frame += 1
-                pred_list.append([])
-                continue
-          # save the obtained video frames
             image_path = osp.join(args.out_dir, "frames", f"{cur_frame:05d}.jpg")
-            if img_original_bgr is not None:
-                video_frame += 1
-                if args.save_frame:
-                    gnu.make_subdir(image_path)
-                    cv2.imwrite(image_path, img_original_bgr)
+            if args.use_openpose_bbox or args.use_hrnet_bbox:
+                # Note: current openpose name should be {raw_image_name}_keypoints.json
+                openpose_imgcoord = demo_utils.read_hrnet_wHand(joints_2d_hrnet[video_frame])
+                hand_bbox_list = demo_utils.get_hrnet_hand_bbox(openpose_imgcoord, img_original_bgr.shape)
+                body_bbox_list = demo_utils.get_hrnet_person_bbox(openpose_imgcoord, img_original_bgr.shape)
+                load_bbox = True
+                
+            # Optimization based integration. This requires openpose prediction
+            if args.integrate_type=='opt':
+                print(f"Loading openpose data from: {openpose_file_path}")
+                # TODO: this works for single person in the image
+                openpose_imgcoord = demo_utils.read_hrnet_wHand(joints_2d_hrnet[video_frame])
+
+            video_frame += 1
+          # save the obtained video frames
         
         elif input_type == 'webcam':
             _, img_original_bgr = input_data.read()
