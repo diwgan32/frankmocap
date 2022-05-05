@@ -138,6 +138,15 @@ class Whole_Body_EFT():
         loss = (conf * self.criterion_keypoints(pred_keypoints_2d[:,:25,:], gt_keypoints_2d[:, :, :-1])).mean()
         return loss
 
+    def keypoint_loss_hands_3d(self, pred_keypoints_3d, prev_keypoints_3d, smoothing_weight):
+        """ Compute 3D norm between current 3d hand coords and prev frame's 3d hand coords
+
+        Note that the order is in openpose ordering
+        """
+        if (prev_keypoints_3d is None):
+            return 0
+        loss = (smoothing_weight * self.criterion_keypoints(pred_keypoints_3d, prev_keypoints_3d[:, :, :-1])).sum()
+        return loss
 
     def keypoint_loss_keypoint21(self, pred_keypoints_2d, gt_keypoints_2d, openpose_weight):
         """ Compute 2D reprojection loss on the keypoints.
@@ -196,6 +205,11 @@ class Whole_Body_EFT():
 #        print(pred_keypoints_2d, gt_keypoints_2d)
 #        input("?")
         loss_keypoints_2d = self.keypoint_loss_openpose25(pred_keypoints_2d, gt_keypoints_2d, 1.0)
+
+
+        loss_hands_3d = 
+            self.keypoint_loss_hands_3d(pred_output.left_hand_joints, input_batch['prev_left_hand_joints'], .25) + \
+            self.keypoint_loss_hands_3d(pred_output.right_hand_joints, input_batch['prev_right_hand_joints'], .25)
 
         # hand joints
         loss_keypoints_2d_hand = \
@@ -283,6 +297,7 @@ class Whole_Body_EFT():
         # TODO: if 3D hand is not valid, sometimes this doesn't work well
         loss = loss + self.keypoint_loss_weight * loss_keypoints_2d_hand *50
 
+        loss = loss + loss_hands_3d * 50
         # 3D Hand mesh loss
         if not bNoHand:
             loss = loss + hadMeshLossAll*1e-4

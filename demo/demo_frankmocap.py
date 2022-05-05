@@ -45,7 +45,7 @@ def __filter_bbox_list(body_bbox_list, hand_bbox_list, single_person):
 def run_regress(
     args, img_original_bgr, 
     body_bbox_list, hand_bbox_list, openpose_kp_imgcoord, bbox_detector,
-    body_mocap, hand_mocap
+    body_mocap, hand_mocap, prev_integral_output_list
 ):
     cond1 = len(body_bbox_list) > 0 and len(hand_bbox_list) > 0
     cond2 = not args.frankmocap_fast_mode
@@ -122,11 +122,12 @@ def run_regress(
     # Optimization
     else:   
         print("Run optimization-based integration")
+        prev_left_hands = prev_integral_output_list[""]
         integral_output_list = integration_eft_optimization(
             body_mocap, pred_body_list, pred_hand_list, 
             body_bbox_list, openpose_kp_imgcoord, 
-            img_original_bgr, is_debug_vis=args.is_opt_debug_vis)
-    
+            img_original_bgr, None, None, is_debug_vis=args.is_opt_debug_vis)
+    print(integral_output_list)
     return body_bbox_list, hand_bbox_list, integral_output_list
 
 
