@@ -207,7 +207,7 @@ class Whole_Body_EFT():
         loss_keypoints_2d = self.keypoint_loss_openpose25(pred_keypoints_2d, gt_keypoints_2d, 1.0)
 
 
-        loss_hands_3d = 
+        loss_hands_3d = \
             self.keypoint_loss_hands_3d(pred_output.left_hand_joints, input_batch['prev_left_hand_joints'], .25) + \
             self.keypoint_loss_hands_3d(pred_output.right_hand_joints, input_batch['prev_right_hand_joints'], .25)
 

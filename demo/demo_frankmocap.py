@@ -122,12 +122,13 @@ def run_regress(
     # Optimization
     else:   
         print("Run optimization-based integration")
-        prev_left_hands = prev_integral_output_list[""]
+        if not (prev_integral_output_list is None):
+            prev_left_hands = prev_integral_output_list[0]["pred_lhand_joints_img"]
+            prev_right_hands = prev_integral_output_list[0]["pred_rhand_joints_img"]
         integral_output_list = integration_eft_optimization(
             body_mocap, pred_body_list, pred_hand_list, 
             body_bbox_list, openpose_kp_imgcoord, 
             img_original_bgr, None, None, is_debug_vis=args.is_opt_debug_vis)
-    print(integral_output_list)
     return body_bbox_list, hand_bbox_list, integral_output_list
 
 
@@ -230,10 +231,13 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
         
         # regression (includes integration)
         # openpose_imgcoord is required for optimization-based integration
+        prev_item = None
+        if (len(pred_list) > 0):
+            prev_item = pred_list[-1]
         body_bbox_list, hand_bbox_list, pred_output_list = run_regress(
             args, img_original_bgr, 
             body_bbox_list, hand_bbox_list, openpose_imgcoord, bbox_detector,
-            body_mocap, hand_mocap)
+            body_mocap, hand_mocap, prev_item)
         # save the obtained body & hand bbox to json file
         if args.save_bbox_output: 
             demo_utils.save_info_to_json(args, image_path, body_bbox_list, hand_bbox_list)
