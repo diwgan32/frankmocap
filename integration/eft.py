@@ -86,6 +86,7 @@ def integration_eft_optimization(
 
         # run eft 
         input_batch['img_cropped_rgb'] = body_info['img_cropped']
+
         input_batch["prev_left_hand_joints"] = prev_left_hands
         input_batch["prev_right_hand_joints"] = prev_right_hands
         pred_rotmat, pred_betas, pred_camera = eft.eft_run(input_batch, eftIterNum=20, is_vis=is_debug_vis)
@@ -153,6 +154,11 @@ def integration_eft_optimization(
         pred_lhand_joints_img = convert_bbox_to_oriIm(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
+        integral_output["pred_lhand_joints_weak"] = weakProjection(
+            pred_lhand_joints_3d,
+            body_info['eft_pred_camera'][:,0],
+            body_info['eft_pred_camera'][:,1:]
+        )
 
         # convert predicted 3D left hand joints to image space (X, Y are aligned to image)
         pred_rhand_joints_bbox = convert_smpl_to_bbox(
