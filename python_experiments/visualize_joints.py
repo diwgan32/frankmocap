@@ -8,7 +8,7 @@ from angles import get_flexion_angle
 from filter import smoothArray
 import core_constants
 
-ROOT_FOLDER = "../wrist_rom/"
+ROOT_FOLDER = "../hand_occlusion_hrnet_1/"
 VIDEO_LOC = "/Volumes/Samsung_T5/TestVideos/hand_occlusion_hrnet"
 JOINTS_2D = "../handle_cans_hands.pkl"
 JOINTS_3D = "../hand_view_3d.p"
@@ -182,10 +182,10 @@ def display_full_body_3d(hand_data, body_data, frame_idx):
     if (len(body_data) == 0):
         plt.show()
         return np.nan, np.nan
-    if not ("pred_vertices_img" in hand_data["pred_output_list"][0]):
+    if not ("pred_joints_img" in hand_data["pred_output_list"][0]):
         return np.nan, np.nan
-        plt.show()
-    body = hand_data["pred_output_list"][0]["pred_vertices_img"]
+        #plt.show()
+    body = hand_data["pred_output_list"][0]["pred_joints_img"]
     #body = body_data[0]["keypoints_3d"]
     display_body_skeleton_3d(body, fig=fig)
     left_wrist = body[7]

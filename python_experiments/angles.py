@@ -53,14 +53,14 @@ def newton_solver(x, S, fingers, wrist, max_iter=1000, errtol=np.power(10., -5))
                 np.linalg.norm(grad_F(x_now, S, fingers, wrist))):
                 break
             if (s == steps[-1]):
-                raise ValueError("No proper step size could be found")
+                return None
 
         err = np.linalg.norm(x_new - x_now)
         x_now = x_new
         cc = cc + 1
 
     if (cc > max_iter or err > errtol):
-        raise ValueError("No convergence")
+        return None
     return(x_now)
 
 # fingers is 4 rows, one for pinky, ring, pointer, middle
@@ -68,6 +68,8 @@ def newton_solver(x, S, fingers, wrist, max_iter=1000, errtol=np.power(10., -5))
 def get_flexion_angle_helper(wrist, elbow, fingers):
     S = np.dot(fingers.T, fingers)
     sol = newton_solver(np.array([1, 0, 0, 1, 1, 1]), S, fingers, wrist)
+    if (sol is None):
+        return np.nan
     normal = sol[0:3]
     
     testvector = (elbow - wrist)/np.linalg.norm(elbow - wrist) #from elbow to wrist
