@@ -15,13 +15,11 @@ import pdb
 ############# input parameters  #############
 from mocap_utils.timer import Timer
 from datetime import datetime
-import demo.get_video_metadata as metadata
 from bodymocap.body_mocap_api import BodyMocap
 from handmocap.hand_mocap_api import HandMocap
 
-from bodymocap.body_bbox_detector import BodyPoseEstimator
-from handmocap.hand_bbox_detector import HandBboxDetector, Openpose_Hand_Detector
 from integration.eft import integration_eft_optimization
+import inference.utils as inference_utils
 
 def __filter_bbox_list(body_bbox_list, hand_bbox_list, single_person):
     # (to make the order as consistent as possible without tracking)
@@ -105,8 +103,8 @@ if __name__ == '__main__':
     default_checkpoint_body_smplx ='./extra_data/body_module/pretrained_weights/smplx-03-28-46060-w_spin_mlc3d_46582-2089_2020_03_28-21_56_16.pt'
     default_checkpoint_hand = "./extra_data/hand_module/pretrained_weights/pose_shape_best.pth"
     
-
-    body_mocap = BodyMocap(default_checkpoint_body_smplx, args.smpl_dir, device = device, use_smplx= True)
-    hand_mocap = HandMocap(default_checkpoint_hand, args.smpl_dir, device = device)
+    device = torch.device('cuda')
+    body_mocap = BodyMocap(default_checkpoint_body_smplx, './extra_data/smpl/', device = device, use_smplx= True)
+    hand_mocap = HandMocap(default_checkpoint_hand, './extra_data/smpl/', device = device)
 
     run_regress(frame, data[0], body_mocap, hand_mocap, None)
