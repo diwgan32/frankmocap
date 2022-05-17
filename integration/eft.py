@@ -9,7 +9,7 @@ from mocap_utils.coordconv import convert_smpl_to_bbox, convert_bbox_to_oriIm
 from bodymocap.utils.imutils import j2d_normalize, conv_bbox_xywh_to_center_scale
 from bodymocap.wholebody_eft import Whole_Body_EFT
 from integration.copy_and_paste import transfer_rotation
-
+from bodymocap.utils.geometry import weakProjection
 
 def integration_eft_optimization(
     body_module, pred_body_list, pred_hand_list, 
@@ -86,10 +86,15 @@ def integration_eft_optimization(
 
         # run eft 
         input_batch['img_cropped_rgb'] = body_info['img_cropped']
-
-        input_batch["prev_left_hand_joints"] = prev_left_hands
-        input_batch["prev_right_hand_joints"] = prev_right_hands
-        pred_rotmat, pred_betas, pred_camera = eft.eft_run(input_batch, eftIterNum=20, is_vis=is_debug_vis)
+        if not(prev_left_hands is None):
+            input_batch["prev_left_hand_joints"] = torch.from_numpy(prev_left_hands).cuda()
+        else:
+            input_batch["prev_left_hand_joints"] = None
+        if not(prev_right_hands is None):
+            input_batch["prev_right_hand_joints"] = torch.from_numpy(prev_right_hands).cuda()
+        else:
+            input_batch["prev_right_hand_joints"] = None
+        pred_rotmat, pred_betas, pred_camera = eft.eft_run(input_batch, eftIterNum=5, is_vis=is_debug_vis)
 
         # Save output
         body_info['eft_pred_betas'] = pred_betas.detach().cpu().numpy()
@@ -154,11 +159,7 @@ def integration_eft_optimization(
         pred_lhand_joints_img = convert_bbox_to_oriIm(
             pred_lhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
         integral_output['pred_lhand_joints_img'] = pred_lhand_joints_img
-        integral_output["pred_lhand_joints_weak"] = weakProjection(
-            pred_lhand_joints_3d,
-            body_info['eft_pred_camera'][:,0],
-            body_info['eft_pred_camera'][:,1:]
-        )
+        integral_output["pred_lhand_joints_weak"] = smplx_output.left_hand_joints.detach().cpu().numpy()
 
         # convert predicted 3D left hand joints to image space (X, Y are aligned to image)
         pred_rhand_joints_bbox = convert_smpl_to_bbox(
@@ -166,7 +167,7 @@ def integration_eft_optimization(
         pred_rhand_joints_img = convert_bbox_to_oriIm(
             pred_rhand_joints_bbox, bbox_scale_ratio, bbox_top_left, image_shape[1], image_shape[0])
         integral_output['pred_rhand_joints_img'] = pred_rhand_joints_img
-
+        integral_output["pred_rhand_joints_weak"] = smplx_output.right_hand_joints.detach().cpu().numpy()
 
         # Hand related prediction from Yu
         # Obtain hand rotation / poses

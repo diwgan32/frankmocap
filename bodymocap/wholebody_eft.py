@@ -145,7 +145,7 @@ class Whole_Body_EFT():
         """
         if (prev_keypoints_3d is None):
             return 0
-        loss = (smoothing_weight * self.criterion_keypoints(pred_keypoints_3d, prev_keypoints_3d[:, :, :-1])).sum()
+        loss = (smoothing_weight * self.criterion_keypoints(pred_keypoints_3d, prev_keypoints_3d[:, :, :])).sum()
         return loss
 
     def keypoint_loss_keypoint21(self, pred_keypoints_2d, gt_keypoints_2d, openpose_weight):
@@ -174,7 +174,6 @@ class Whole_Body_EFT():
             # pred_aa = rotmat3x3_to_angleaxis(pred_rotmat)
             pred_aa = gu.rotation_matrix_to_angle_axis(pred_rotmat).cuda()
             pred_aa = pred_aa.view(pred_aa.shape[0],-1)
-          
             # pred_output = self.smpl(betas=pred_betas, body_pose=pred_rotmat[:,1:], global_orient=pred_rotmat[:,[0]], pose2rot=False, right_hand_pose= right_hand_pose, left_hand_pose= left_hand_pose)
             pred_output = self.smpl(
                     betas=pred_betas, 
@@ -288,24 +287,27 @@ class Whole_Body_EFT():
                     hadMeshLossAll += handMeshloss * 10
         
         # camera prior
-        loss = ((torch.exp(-pred_camera[:,0]*10)) ** 2 ).mean() +  self.beta_loss_weight * loss_regr_betas_noReject
+#        loss = ((torch.exp(-pred_camera[:,0]*10)) ** 2 ).mean() +  self.beta_loss_weight * loss_regr_betas_noReject
 
         # 2D body keypoints 
-        loss = loss + self.keypoint_loss_weight * loss_keypoints_2d * 50
+#        loss = loss + self.keypoint_loss_weight * loss_keypoints_2d * 50
 
         # 2D hand keypoints
         # TODO: if 3D hand is not valid, sometimes this doesn't work well
-        loss = loss + self.keypoint_loss_weight * loss_keypoints_2d_hand *50
-
-        loss = loss + loss_hands_3d * 50
+        loss = self.keypoint_loss_weight * loss_keypoints_2d_hand *50
+#        loss = torch.tensor([0.0], requires_grad=True)
+        
+#        loss = loss + loss_hands_3d * 5
         # 3D Hand mesh loss
         if not bNoHand:
-            loss = loss + hadMeshLossAll*1e-4
+            pass
+#            loss = loss + hadMeshLossAll*1e-4
 
         # Force the torso orientation and legs
         if bNoLegs:
-            loss = loss + loss_torso_upright
-            loss = loss + loss_straight_legs
+            pass
+ #           loss = loss + loss_torso_upright
+  #          loss = loss + loss_straight_legs
 
         return loss, pred_output, handMeshVert
             
@@ -406,9 +408,16 @@ class Whole_Body_EFT():
         t1 = time.time()
         # Run prediction
         pred_rotmat, pred_betas, pred_camera = self.model_regressor(images)
+
+        pred_aa = gu.rotation_matrix_to_angle_axis(pred_rotmat).cuda()
+        pred_aa = pred_aa.view(pred_aa.shape[0],-1)
+#        print(smplx_output.left_hand_joints)
+#        print(smplx_output.joints)
         #print(f"Forward time: {time.time() - t1}") 
         # calculate loss
         loss, pred_smpl_output, hand_mesh_debug = self.compute_loss(input_batch, pred_rotmat, pred_betas, pred_camera)
+#        print(loss)
+#        input("?")
         # print(f"EFTstep>> loss: {loss}")
         t2 = time.time()
         # Do backprop
@@ -418,5 +427,5 @@ class Whole_Body_EFT():
         #print(f"Backward time: {time.time() - t2}")
         if is_vis:
             self.vis_eft_step_output(input_batch, pred_camera, pred_smpl_output, hand_mesh_debug)
-
+        
         return pred_rotmat, pred_betas, pred_camera 

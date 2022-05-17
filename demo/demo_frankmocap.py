@@ -123,8 +123,11 @@ def run_regress(
     else:   
         print("Run optimization-based integration")
         if not (prev_integral_output_list is None):
-            prev_left_hands = prev_integral_output_list[0]["pred_lhand_joints_img"]
-            prev_right_hands = prev_integral_output_list[0]["pred_rhand_joints_img"]
+            prev_left_hands = prev_integral_output_list[0]["pred_lhand_joints_weak"]
+            prev_right_hands = prev_integral_output_list[0]["pred_rhand_joints_weak"]
+        else:
+            prev_left_hands = None
+            prev_right_hands = None
         integral_output_list = integration_eft_optimization(
             body_mocap, pred_body_list, pred_hand_list, 
             body_bbox_list, openpose_kp_imgcoord, 
@@ -186,6 +189,8 @@ def run_frank_mocap(args, bbox_detector, body_mocap, hand_mocap, visualizer):
 
         elif input_type == 'video':      
             _, img_original_bgr = input_data.read()
+            if (img_original_bgr is None):
+                break
             image_path = osp.join(args.out_dir, "frames", f"{cur_frame:05d}.jpg")
             if args.use_openpose_bbox or args.use_hrnet_bbox:
                 # Note: current openpose name should be {raw_image_name}_keypoints.json
