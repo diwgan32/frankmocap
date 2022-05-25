@@ -58,7 +58,8 @@ class SMPLX(_SMPLX):
         kwargs['ext'] = 'pkl'       #We have pkl file
         super(SMPLX, self).__init__(*args, **kwargs)
         joints = [constants.JOINT_MAP[i] for i in constants.JOINT_NAMES]
-        JOINT_REGRESSOR_TRAIN_EXTRA_SMPLX = 'extra_data/body_module/J_regressor_extra_smplx.npy'
+        extra_data = kwargs['extra_data_folder']
+        JOINT_REGRESSOR_TRAIN_EXTRA_SMPLX = f'{extra_data}/body_module/J_regressor_extra_smplx.npy'
         J_regressor_extra = np.load(JOINT_REGRESSOR_TRAIN_EXTRA_SMPLX)           #(9, 10475)
         self.register_buffer('J_regressor_extra', torch.tensor(J_regressor_extra, dtype=torch.float32))
         self.joint_map = torch.tensor(joints, dtype=torch.long)

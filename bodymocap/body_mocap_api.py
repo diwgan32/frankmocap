@@ -17,7 +17,7 @@ from bodymocap.body_eft import Body_eft
 from bodymocap.utils.imutils import j2d_normalize, conv_bbox_xywh_to_center_scale
 
 class BodyMocap(object):
-    def __init__(self, regressor_checkpoint, smpl_dir, device=torch.device('cuda'), use_smplx=False):
+    def __init__(self, regressor_checkpoint, smpl_dir, extra_data_folder='./extra_data', device=torch.device('cuda'), use_smplx=False):
 
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -25,6 +25,7 @@ class BodyMocap(object):
         if use_smplx:
             smplModelPath = smpl_dir + '/SMPLX_NEUTRAL.pkl'
             self.smpl = SMPLX(smpl_dir,
+                    extra_data_folder=extra_data_folder,
                     batch_size=1,
                     num_betas = 10,
                     use_pca = False,
@@ -36,7 +37,7 @@ class BodyMocap(object):
             self.use_smplx = False
             
         #Load pre-trained neural network 
-        SMPL_MEAN_PARAMS = './extra_data/body_module/data_from_spin/smpl_mean_params.npz'
+        SMPL_MEAN_PARAMS = f'{extra_data_folder}/body_module/data_from_spin/smpl_mean_params.npz'
         self.model_regressor = hmr(SMPL_MEAN_PARAMS).to(self.device)
         checkpoint = torch.load(regressor_checkpoint)
         self.model_regressor.load_state_dict(checkpoint['model'], strict=False)
