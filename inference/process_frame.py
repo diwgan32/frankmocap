@@ -72,17 +72,16 @@ def run_regress_helper(
         body_bbox_list, openpose_kp_imgcoord, 
         img_original_bgr, prev_left_hands, prev_right_hands, is_debug_vis=False
     )
-
     return body_bbox_list, hand_bbox_list, integral_output_list
 
 
-def run_regress(
+def run_regress_wrnch(
     img_original_bgr,
-    hrnet_kp_imgcoord,
+    wrnch_frame,
     body_mocap, hand_mocap,
     prev_integral_output_list
 ):
-    openpose_imgcoord = inference_utils.read_hrnet_wHand(hrnet_kp_imgcoord)
+    openpose_imgcoord = inference_utils.read_wrnch_wHand(wrnch_frame)
     hand_bbox_list = inference_utils.get_hrnet_hand_bbox(openpose_imgcoord, img_original_bgr.shape)
     body_bbox_list = inference_utils.get_hrnet_person_bbox(openpose_imgcoord, img_original_bgr.shape)
 
