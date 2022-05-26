@@ -24,7 +24,7 @@ def integration_eft_optimization(
     image_shape = img_original_bgr.shape
 
     # get eft model
-    eft = Whole_Body_EFT(body_module.model_regressor, smplx_model)
+    eft = Whole_Body_EFT(body_module.model_regressor, smplx_model, extra_data_folder=body_module.extra_data_folder)
 
     # Convert Openpose image process to body bbox space
     bboxInfo = conv_bbox_xywh_to_center_scale(body_bbox_list[0], image_shape)

@@ -31,10 +31,10 @@ class Whole_Body_EFT():
     This EFT code is for in-the-wild data where no GT is available
     """
 
-    def __init__(self, model, smpl):
+    def __init__(self, model, smpl, extra_data_folder="./extra_data"):
         #Basic
         # self.smpl_mapping = pickle.load(open("/home/hjoo/codes/handmocap/SMPLX_HAND_INFO.pkl", "rb"))
-        self.smpl_mapping = gnu.load_pkl("extra_data/hand_module/SMPLX_HAND_INFO.pkl")
+        self.smpl_mapping = gnu.load_pkl(f"{extra_data_folder}/hand_module/SMPLX_HAND_INFO.pkl")
         
         self.model_regressor = model
 
