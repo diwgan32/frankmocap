@@ -58,3 +58,55 @@ def read_hrnet_wHand(joint_data, gt_part=None, dataset=None):
                 op_output["hand_left_keypoints_2d"][:, -1],
                 0)
     return op_output 
+
+def _wrnch_get_person(frame, person_id):
+    for i in range(len(frame)):
+        if (frame[i]["id"] == person_id):
+            return frame[i]
+    return []
+
+def read_wrnch_wHand(wrnch_data, gt_part=None, dataset=None):
+    if gt_part is None:
+        gt_part = np.zeros([24,3])
+    if dataset is None:
+        dataset ='coco'
+    op_output = {}
+    joint_data = _wrnch_get_person(wrnch_data["persons"], 0)
+    if (not "pose2d" in joint_data):
+        return None, None
+
+    arr_2d = joint_data["pose2d"]["joints"]
+    scores = joint_data["pose2d"]["scores"]
+
+    # read the openpose detection
+    if len(arr_2d) == 0:
+        # no openpose detection
+        # keyp25 = np.zeros([25,3])
+        return None, None
+    # size of person in pixels
+    op_output["pose_keypoints_2d"] = np.zeros((25, 3))
+    l_shoulder = joint_data[0]["keypoints"][13]
+    r_shoulder = joint_data[0]["keypoints"][12]
+    l_hip = joint_data[0]["keypoints"][2]
+    r_hip = joint_data[0]["keypoints"][3]
+    op_output["pose_keypoints_2d"] = joint_data[0]["keypoints"][[16, 8, 12, 11, 10, 13, 14, 15, 6, 2, 1, 0, 3, 4, 5, 17, 19, 18, 20, 22, -1, 24, 21, -1, 23]]
+    op_output["pose_keypoints_2d"][20, -1] = 0
+    op_output["pose_keypoints_2d"][23, -1] = 0
+    hand_array_right = np.zeros((21, 3))
+    hand_array_left = np.zeros((21, 3))
+    if ("hand_pose" in joint_data):
+        if (("right" in joint_data["hand_pose"])):
+            hand_array_right = joint_data["hand_pose"]["right"]["joints"]
+
+        if (("left" in singlePersonJointData["hand_pose"])):
+            hand_array_left = joint_data["hand_pose"]["left"]["joints"]
+
+    op_output["hand_right_keypoints_2d"] = hand_array_right[0, 1, 6, 7, 8, 2, 10, 11, 12, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20]
+    op_output["hand_left_keypoints_2d"] = hand_array_left[0, 1, 6, 7, 8, 2, 10, 11, 12, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20]
+    op_output["hand_right_keypoints_2d"][:, -1] = np.where(op_output["hand_right_keypoints_2d"][:, -1] > .05,
+            op_output["hand_right_keypoints_2d"][:, -1],
+            0)
+    op_output["hand_left_keypoints_2d"][:, -1] = np.where(op_output["hand_left_keypoints_2d"][:, -1] > .05,
+            op_output["hand_left_keypoints_2d"][:, -1],
+            0)
+    return op_output 
