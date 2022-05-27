@@ -90,12 +90,12 @@ def run_regress_wrnch(
 
 if __name__ == '__main__':
     VIDEO_FILENAME = '/home/fsuser/videos/hand_occlusion.mov'
-    JOINT_DATA_FILENAME = '/home/fsuser/pickle_files/hand_occlusion_hands.p'
+    JOINT_DATA_FILENAME = '/home/fsuser/wrnch_data/handle_cans.json'
     cap = cv2.VideoCapture(VIDEO_FILENAME)
     _, frame = cap.read()
     cap.release()
     with open(JOINT_DATA_FILENAME, 'rb') as f:
-        data = pickle.load(f)
+        data = json.load(f)
 
     prev_integral_output_list = None
 
@@ -106,4 +106,4 @@ if __name__ == '__main__':
     body_mocap = BodyMocap(default_checkpoint_body_smplx, './extra_data/smpl/', device = device, use_smplx= True)
     hand_mocap = HandMocap(default_checkpoint_hand, './extra_data/smpl/', device = device)
 
-    run_regress(frame, data[0], body_mocap, hand_mocap, None)
+    run_regress_wrnch(frame, data["frames"][0], body_mocap, hand_mocap, None)
