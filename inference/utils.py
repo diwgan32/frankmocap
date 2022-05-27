@@ -75,8 +75,8 @@ def read_wrnch_wHand(wrnch_data, gt_part=None, dataset=None):
     if (not "pose2d" in joint_data):
         return None, None
 
-    arr_2d = joint_data["pose2d"]["joints"]
-    scores = joint_data["pose2d"]["scores"]
+    arr_2d = np.array(joint_data["pose2d"]["joints"]).reshape((25, 2))
+    scores = np.array(joint_data["pose2d"]["scores"])
 
     # read the openpose detection
     if len(arr_2d) == 0:
@@ -84,25 +84,31 @@ def read_wrnch_wHand(wrnch_data, gt_part=None, dataset=None):
         # keyp25 = np.zeros([25,3])
         return None, None
     # size of person in pixels
+    wrnch_to_openpose = [16, 8, 12, 11, 10, 13, 14, 15, 6, 2, 1, 0, 3, 4, 5, 17, 19, 18, 20, 22, -1, 24, 21, -1, 23] 
     op_output["pose_keypoints_2d"] = np.zeros((25, 3))
-    l_shoulder = joint_data[0]["keypoints"][13]
-    r_shoulder = joint_data[0]["keypoints"][12]
-    l_hip = joint_data[0]["keypoints"][2]
-    r_hip = joint_data[0]["keypoints"][3]
-    op_output["pose_keypoints_2d"] = joint_data[0]["keypoints"][[16, 8, 12, 11, 10, 13, 14, 15, 6, 2, 1, 0, 3, 4, 5, 17, 19, 18, 20, 22, -1, 24, 21, -1, 23]]
+    op_output["pose_keypoints_2d"][:, :2] = arr_2d[wrnch_to_openpose]
     op_output["pose_keypoints_2d"][20, -1] = 0
     op_output["pose_keypoints_2d"][23, -1] = 0
+    op_output["pose_keypoints_2d"][:, -1] = scores[wrnch_to_openpose]
     hand_array_right = np.zeros((21, 3))
     hand_array_left = np.zeros((21, 3))
+    hand_array_right_scores = np.ones(21)
+    hand_array_left_scores = np.ones(21)
+    op_output["hand_right_keypoints_2d"] = np.zeros((21, 3))
+    op_output["hand_left_keypoints_2d"] = np.zeros((21, 3))
     if ("hand_pose" in joint_data):
         if (("right" in joint_data["hand_pose"])):
-            hand_array_right = joint_data["hand_pose"]["right"]["joints"]
+            hand_array_right = np.array(joint_data["hand_pose"]["right"]["joints"]).reshape((21, 2))
+#            hand_array_right_scores = np.array(joint_data["hand_pose"]["right"]["scores"])
 
-        if (("left" in singlePersonJointData["hand_pose"])):
-            hand_array_left = joint_data["hand_pose"]["left"]["joints"]
-
-    op_output["hand_right_keypoints_2d"] = hand_array_right[0, 1, 6, 7, 8, 2, 10, 11, 12, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20]
-    op_output["hand_left_keypoints_2d"] = hand_array_left[0, 1, 6, 7, 8, 2, 10, 11, 12, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20]
+        if (("left" in joint_data["hand_pose"])):
+            hand_array_left = np.array(joint_data["hand_pose"]["left"]["joints"]).reshape((21, 2))
+#            hand_array_left_scores = np.array(joint_data["hand_pose"]["left"]["scores"])
+    wrnch_to_openpose_hands = [0, 1, 6, 7, 8, 2, 10, 11, 12, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20] 
+    op_output["hand_right_keypoints_2d"][:, :2] = hand_array_right[wrnch_to_openpose_hands]
+    op_output["hand_left_keypoints_2d"][:, :2] = hand_array_left[wrnch_to_openpose_hands]
+    op_output["hand_right_keypoints_2d"][:, -1] = hand_array_right_scores
+    op_output["hand_left_keypoints_2d"][:, -1] = hand_array_left_scores
     op_output["hand_right_keypoints_2d"][:, -1] = np.where(op_output["hand_right_keypoints_2d"][:, -1] > .05,
             op_output["hand_right_keypoints_2d"][:, -1],
             0)
