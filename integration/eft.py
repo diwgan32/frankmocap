@@ -94,7 +94,7 @@ def integration_eft_optimization(
             input_batch["prev_right_hand_joints"] = torch.from_numpy(prev_right_hands).cuda()
         else:
             input_batch["prev_right_hand_joints"] = None
-        pred_rotmat, pred_betas, pred_camera = eft.eft_run(input_batch, eftIterNum=20, is_vis=is_debug_vis)
+        pred_rotmat, pred_betas, pred_camera = eft.eft_run(input_batch, eftIterNum=5, is_vis=is_debug_vis)
 
         # Save output
         body_info['eft_pred_betas'] = pred_betas.detach().cpu().numpy()

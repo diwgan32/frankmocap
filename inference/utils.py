@@ -127,5 +127,5 @@ def read_wrnch_wHand(wrnch_data, frame_size, gt_part=None, dataset=None):
             op_output["hand_left_keypoints_2d"][:, -1],
             0)
     op_output["hand_right_keypoints_2d"] = scale_up(op_output["hand_right_keypoints_2d"], frame_size)
-    op_output["hand_right_keypoints_2d"] = scale_up(op_output["hand_right_keypoints_2d"], frame_size)
+    op_output["hand_left_keypoints_2d"] = scale_up(op_output["hand_left_keypoints_2d"], frame_size)
     return op_output 
