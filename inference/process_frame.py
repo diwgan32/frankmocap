@@ -11,6 +11,7 @@ import argparse
 import json
 import pickle
 import pdb
+import time
 
 ############# input parameters  #############
 from mocap_utils.timer import Timer
@@ -61,7 +62,7 @@ def run_regress_helper(
     assert len(hand_bbox_list) == len(pred_hand_list)
     assert len(pred_hand_list) == len(pred_body_list)
 
-    if not (prev_integral_output_list is None):
+    if not (prev_integral_output_list is None) and len(prev_integral_output_list) > 0:
         prev_left_hands = prev_integral_output_list[0]["pred_lhand_joints_weak"]
         prev_right_hands = prev_integral_output_list[0]["pred_rhand_joints_weak"]
     else:
@@ -81,10 +82,12 @@ def run_regress_wrnch(
     body_mocap, hand_mocap,
     prev_integral_output_list
 ):
-    openpose_imgcoord = inference_utils.read_wrnch_wHand(wrnch_frame)
+    print(img_original_bgr.shape)
+    t1 = time.time()
+    openpose_imgcoord = inference_utils.read_wrnch_wHand(wrnch_frame, img_original_bgr.shape)
     hand_bbox_list = inference_utils.get_hrnet_hand_bbox(openpose_imgcoord, img_original_bgr.shape)
     body_bbox_list = inference_utils.get_hrnet_person_bbox(openpose_imgcoord, img_original_bgr.shape)
-
+    print(f"Preprocess time: {time.time()-t1}")
     return run_regress_helper(img_original_bgr, body_bbox_list, hand_bbox_list, openpose_imgcoord,
         body_mocap, hand_mocap, prev_integral_output_list)
 

@@ -94,7 +94,7 @@ def integration_eft_optimization(
             input_batch["prev_right_hand_joints"] = torch.from_numpy(prev_right_hands).cuda()
         else:
             input_batch["prev_right_hand_joints"] = None
-        pred_rotmat, pred_betas, pred_camera = eft.eft_run(input_batch, eftIterNum=5, is_vis=is_debug_vis)
+        pred_rotmat, pred_betas, pred_camera = eft.eft_run(input_batch, eftIterNum=20, is_vis=is_debug_vis)
 
         # Save output
         body_info['eft_pred_betas'] = pred_betas.detach().cpu().numpy()
@@ -126,7 +126,6 @@ def integration_eft_optimization(
         camTrans = body_info['eft_pred_camera'][1:]
         bbox_top_left = body_info['bbox_top_left']
         bbox_scale_ratio = body_info['bbox_scale_ratio']
-
         integral_output = dict()
         integral_output['pred_vertices_smpl'] = pred_vertices
         integral_output['faces'] = smplx_model.faces

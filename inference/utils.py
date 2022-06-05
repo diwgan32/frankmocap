@@ -10,6 +10,8 @@ def get_hrnet_bbox_helper(joints, frame_shape):
 def get_hrnet_hand_bbox(op_output, frame_shape):
     ret = []
     ret.append({})
+    if (op_output is None):
+        return []
     right_hand = op_output["hand_right_keypoints_2d"]
     ret[0]["right_hand"] = get_hrnet_bbox_helper(right_hand, frame_shape)
     left_hand = op_output["hand_left_keypoints_2d"]
@@ -18,6 +20,8 @@ def get_hrnet_hand_bbox(op_output, frame_shape):
 
 def get_hrnet_person_bbox(op_output, frame_shape):
     ret = []
+    if (op_output is None):
+        return ret
     kpts = op_output["pose_keypoints_2d"]
     ret.append(get_hrnet_bbox_helper(kpts, frame_shape))
     return ret
@@ -65,7 +69,14 @@ def _wrnch_get_person(frame, person_id):
             return frame[i]
     return []
 
-def read_wrnch_wHand(wrnch_data, gt_part=None, dataset=None):
+def scale_up(joints, frame_size):
+    scores = joints[:, -1]
+    joints[:, 0] = np.where(scores > 0, joints[:, 0]*frame_size[1], -1.0)
+    joints[:, 1] = np.where(scores > 0, joints[:, 1]*frame_size[0], -1.0)
+
+    return joints
+
+def read_wrnch_wHand(wrnch_data, frame_size, gt_part=None, dataset=None):
     if gt_part is None:
         gt_part = np.zeros([24,3])
     if dataset is None:
@@ -73,16 +84,15 @@ def read_wrnch_wHand(wrnch_data, gt_part=None, dataset=None):
     op_output = {}
     joint_data = _wrnch_get_person(wrnch_data["persons"], 0)
     if (not "pose2d" in joint_data):
-        return None, None
+        return None
 
     arr_2d = np.array(joint_data["pose2d"]["joints"]).reshape((25, 2))
     scores = np.array(joint_data["pose2d"]["scores"])
-
     # read the openpose detection
     if len(arr_2d) == 0:
         # no openpose detection
         # keyp25 = np.zeros([25,3])
-        return None, None
+        return None
     # size of person in pixels
     wrnch_to_openpose = [16, 8, 12, 11, 10, 13, 14, 15, 6, 2, 1, 0, 3, 4, 5, 17, 19, 18, 20, 22, -1, 24, 21, -1, 23] 
     op_output["pose_keypoints_2d"] = np.zeros((25, 3))
@@ -90,6 +100,7 @@ def read_wrnch_wHand(wrnch_data, gt_part=None, dataset=None):
     op_output["pose_keypoints_2d"][20, -1] = 0
     op_output["pose_keypoints_2d"][23, -1] = 0
     op_output["pose_keypoints_2d"][:, -1] = scores[wrnch_to_openpose]
+    op_output["pose_keypoints_2d"] = scale_up(op_output["pose_keypoints_2d"], frame_size)
     hand_array_right = np.zeros((21, 3))
     hand_array_left = np.zeros((21, 3))
     hand_array_right_scores = np.ones(21)
@@ -115,4 +126,6 @@ def read_wrnch_wHand(wrnch_data, gt_part=None, dataset=None):
     op_output["hand_left_keypoints_2d"][:, -1] = np.where(op_output["hand_left_keypoints_2d"][:, -1] > .05,
             op_output["hand_left_keypoints_2d"][:, -1],
             0)
+    op_output["hand_right_keypoints_2d"] = scale_up(op_output["hand_right_keypoints_2d"], frame_size)
+    op_output["hand_right_keypoints_2d"] = scale_up(op_output["hand_right_keypoints_2d"], frame_size)
     return op_output 
