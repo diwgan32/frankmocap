@@ -74,6 +74,7 @@ class HandMocap:
 
         img_cropped = img[int(min_y):int(max_y), int(min_x):int(max_x), :]
         new_size = max(max_x-min_x, max_y-min_y)
+#        print('new size', new_size, max_x, min_x, max_y, min_y, width, height)
         new_img = np.zeros((new_size, new_size, 3), dtype=np.uint8)
         # new_img = np.zeros((new_size, new_size, 3))
         new_img[:(max_y-min_y), :(max_x-min_x), :] = img_cropped

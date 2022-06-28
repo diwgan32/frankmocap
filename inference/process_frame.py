@@ -82,12 +82,11 @@ def run_regress_wrnch(
     body_mocap, hand_mocap,
     prev_integral_output_list
 ):
-    print(img_original_bgr.shape)
     t1 = time.time()
     openpose_imgcoord = inference_utils.read_wrnch_wHand(wrnch_frame, img_original_bgr.shape)
     hand_bbox_list = inference_utils.get_hrnet_hand_bbox(openpose_imgcoord, img_original_bgr.shape)
     body_bbox_list = inference_utils.get_hrnet_person_bbox(openpose_imgcoord, img_original_bgr.shape)
-    print(f"Preprocess time: {time.time()-t1}")
+#    print(f"Preprocess time: {time.time()-t1}")
     return run_regress_helper(img_original_bgr, body_bbox_list, hand_bbox_list, openpose_imgcoord,
         body_mocap, hand_mocap, prev_integral_output_list)
 

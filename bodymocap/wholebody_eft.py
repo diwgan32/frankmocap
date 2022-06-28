@@ -73,12 +73,12 @@ class Whole_Body_EFT():
 
     # EFT ##########################
     def backupModel(self):
-        print(">>> Model status saved!")
+        #print(">>> Model status saved!")
         self.model_backup = copy.deepcopy(self.model_regressor.state_dict())
         # self.optimizer_backup = copy.deepcopy(self.optimizer.state_dict())
 
     def reloadModel(self):
-        print(">>> Model status has been reloaded to initial!")
+        #print(">>> Model status has been reloaded to initial!")
         self.model_regressor.load_state_dict(self.model_backup)
         # self.optimizer.load_state_dict(self.optimizer_backup)
 
@@ -395,7 +395,7 @@ class Whole_Body_EFT():
 
         # Reset Model
         self.reloadModel()
-        print(f"Time: {time.time()-t}")
+        #print(f"Time: {time.time()-t}")
         return pred_rotmat, pred_betas, pred_camera
 
 
