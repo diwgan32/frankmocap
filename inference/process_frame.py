@@ -61,7 +61,7 @@ def run_regress_helper(
     pred_body_list = body_mocap.regress(img_original_bgr, body_bbox_list)
     assert len(hand_bbox_list) == len(pred_hand_list)
     assert len(pred_hand_list) == len(pred_body_list)
-
+    print(pred_hand_list, pred_body_list)
     if not (prev_integral_output_list is None) and len(prev_integral_output_list) > 0:
         prev_left_hands = prev_integral_output_list[0]["pred_lhand_joints_weak"]
         prev_right_hands = prev_integral_output_list[0]["pred_rhand_joints_weak"]

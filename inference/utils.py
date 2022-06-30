@@ -16,6 +16,10 @@ def get_hrnet_hand_bbox(op_output, frame_shape):
     ret[0]["right_hand"] = get_hrnet_bbox_helper(right_hand, frame_shape)
     left_hand = op_output["hand_left_keypoints_2d"]
     ret[0]["left_hand"] = get_hrnet_bbox_helper(left_hand, frame_shape)
+    if (np.any(ret[0]["right_hand"] < 0 )):
+        ret[0]["right_hand"] = None
+    if (np.any(ret[0]["left_hand"] < 0)):
+        ret[0]["left_hand"] = None
     return ret
 
 def get_hrnet_person_bbox(op_output, frame_shape):
@@ -24,6 +28,8 @@ def get_hrnet_person_bbox(op_output, frame_shape):
         return ret
     kpts = op_output["pose_keypoints_2d"]
     ret.append(get_hrnet_bbox_helper(kpts, frame_shape))
+    if (np.any(ret < 0)):
+        return None
     return ret
 
 def read_hrnet_wHand(joint_data, gt_part=None, dataset=None):
