@@ -28,8 +28,8 @@ def get_hrnet_person_bbox(op_output, frame_shape):
         return ret
     kpts = op_output["pose_keypoints_2d"]
     ret.append(get_hrnet_bbox_helper(kpts, frame_shape))
-    if (np.any(ret < 0)):
-        return None
+    if (np.any(ret[0] < 0)):
+        return [None]
     return ret
 
 def read_hrnet_wHand(joint_data, gt_part=None, dataset=None):
